@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import {
   CalendarDays, Clock, MapPin, Trophy, Award, Star,
   BookOpen, Bell,
@@ -11,6 +13,7 @@ import { StatCard } from '../../components/ui/StatCard';
 import { FadeIn, StaggerGroup, StaggerItem } from '../../components/ui/motion';
 import { useAuth } from '../../context/AuthContext';
 import { useCountUp } from '../../hooks';
+import { EventActionModal, type EventActionDetails } from '../../components/events/EventActionModal';
 import {
   mockMemberStats,
   mockTodayEvents,
@@ -18,10 +21,23 @@ import {
   mockBlogPosts,
   mockAnnouncements,
   mockLeaderboard,
+  buildMockCalendar,
+  mockEvents,
 } from '../../utils/mockData';
 
 export default function MemberDashboard() {
   const { user } = useAuth();
+  const [selectedEvent, setSelectedEvent] = useState<EventActionDetails | null>(null);
+  const [events] = useState(() => {
+    const saved = localStorage.getItem('campusos_events');
+    return saved ? JSON.parse(saved) : mockEvents;
+  });
+  const [announcements] = useState(() => {
+    const saved = localStorage.getItem('campusos_announcements');
+    return saved ? JSON.parse(saved) : mockAnnouncements;
+  });
+  const calendar = buildMockCalendar(events);
+  const weekdays = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
   const firstName = user?.name?.split(' ')[0] ?? 'there';
@@ -47,8 +63,12 @@ export default function MemberDashboard() {
             </p>
           </div>
           <div className="flex gap-2.5">
-            <Button variant="secondary" leftIcon="Search" size="md">Find Events</Button>
-            <Button leftIcon="UserRound" size="md" magnetic>My Profile</Button>
+            <Link to="/app/events">
+              <Button variant="secondary" leftIcon="Search" size="md">Find Events</Button>
+            </Link>
+            <Link to="/app/profile">
+              <Button leftIcon="UserRound" size="md" magnetic>My Profile</Button>
+            </Link>
           </div>
         </div>
       </FadeIn>
@@ -72,7 +92,7 @@ export default function MemberDashboard() {
               <CardHeader
                 title="Upcoming Events"
                 subtitle="Events happening at your campus"
-                action={<Button variant="ghost" size="sm" rightIcon="ArrowRight">View all</Button>}
+                action={<Link to="/app/events"><Button variant="ghost" size="sm" rightIcon="ArrowRight">View all</Button></Link>}
               />
               <div className="space-y-3">
                 {mockTodayEvents.map((e, i) => (
@@ -95,7 +115,7 @@ export default function MemberDashboard() {
                     </div>
                     <div className="flex flex-col items-end gap-2">
                       <Badge tone="navy" dot>{e.category}</Badge>
-                      <Button variant="secondary" size="sm">Register</Button>
+                      <Button variant="secondary" size="sm" onClick={() => setSelectedEvent(e)}>Register</Button>
                     </div>
                   </motion.div>
                 ))}
@@ -140,7 +160,7 @@ export default function MemberDashboard() {
               <CardHeader
                 title="Recent Blogs"
                 subtitle="Latest from the community"
-                action={<Button variant="ghost" size="sm" rightIcon="ArrowRight">Read all</Button>}
+                action={<Link to="/app/blogs"><Button variant="ghost" size="sm" rightIcon="ArrowRight">Read all</Button></Link>}
               />
               <div className="grid gap-3 sm:grid-cols-2">
                 {mockBlogPosts.slice(0, 2).map((post, i) => (
@@ -198,13 +218,58 @@ export default function MemberDashboard() {
             </Card>
           </FadeIn>
 
+          {/* Calendar */}
+          <FadeIn delay={0.12}>
+            <Card>
+              <CardHeader title="Calendar" subtitle={new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })} />
+              <div className="mb-2 grid grid-cols-7 gap-1 text-center text-[0.68rem] font-semibold text-ink-soft">
+                {weekdays.map((d, i) => <div key={i}>{d}</div>)}
+              </div>
+              <div className="grid grid-cols-7 gap-1">
+                {calendar.map((d, i) => (
+                  <motion.div
+                    key={i}
+                    whileHover={d.day ? { scale: 1.08 } : {}}
+                    onClick={() => {
+                      if (d.events > 0) {
+                        const ev = events.find((e: any) =>
+                          e.date.toLowerCase() === 'jul ' + d.day ||
+                          e.date.toLowerCase() === 'jul 0' + d.day
+                        );
+                        if (ev) {
+                          setSelectedEvent(ev);
+                        }
+                      }
+                    }}
+                    className={`relative flex aspect-square items-center justify-center rounded-lg text-xs transition-colors ${
+                      d.inMonth ? 'text-ink' : 'text-ink-soft/30'
+                    } ${
+                      d.isToday
+                        ? 'bg-navy font-bold text-white shadow-soft'
+                        : d.events > 0
+                        ? 'cursor-pointer font-bold text-navy hover:bg-navy/10 ring-1 ring-navy/20'
+                        : d.day
+                        ? 'hover:bg-cream-200 cursor-pointer'
+                        : ''
+                    }`}
+                  >
+                    {d.day || ''}
+                    {d.events > 0 && !d.isToday && (
+                      <span className="absolute bottom-1 h-1.5 w-1.5 rounded-full bg-navy" />
+                    )}
+                  </motion.div>
+                ))}
+              </div>
+            </Card>
+          </FadeIn>
+
           {/* Leaderboard snippet */}
           <FadeIn delay={0.14}>
             <Card>
               <CardHeader
                 title="Leaderboard"
                 subtitle="Top contributors"
-                action={<Button variant="ghost" size="sm">View all</Button>}
+                action={<Link to="/app/leaderboard"><Button variant="ghost" size="sm">View all</Button></Link>}
               />
               <div className="space-y-2.5">
                 {mockLeaderboard.slice(0, 5).map((p, i) => (
@@ -234,7 +299,7 @@ export default function MemberDashboard() {
             <Card>
               <CardHeader title="Announcements" action={<Bell className="h-4 w-4 text-ink-soft" />} />
               <div className="space-y-3">
-                {mockAnnouncements.slice(0, 2).map((a, i) => (
+                {announcements.slice(0, 2).map((a: any, i: number) => (
                   <motion.div
                     key={a.id}
                     initial={{ opacity: 0, y: 8 }}
@@ -281,6 +346,7 @@ export default function MemberDashboard() {
           </FadeIn>
         </div>
       </div>
+      <EventActionModal event={selectedEvent} onClose={() => setSelectedEvent(null)} />
     </div>
   );
 }

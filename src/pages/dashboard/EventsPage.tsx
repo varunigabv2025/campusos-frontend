@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Clock, MapPin, Users, Filter } from 'lucide-react';
 import { Badge } from '../../components/ui/Badge';
@@ -6,6 +6,10 @@ import { Button } from '../../components/ui/Button';
 import { SearchBar } from '../../components/ui/SearchBar';
 import { FadeIn, StaggerGroup, StaggerItem } from '../../components/ui/motion';
 import { mockEvents } from '../../utils/mockData';
+import { EventActionModal, type EventActionDetails } from '../../components/events/EventActionModal';
+import { useToast } from '../../context/ToastContext';
+import { useAuth } from '../../context/AuthContext';
+import { Modal } from '../../components/ui/Modal';
 
 const statusTone = {
   upcoming: 'navy',
@@ -16,14 +20,69 @@ const statusTone = {
 const filters = ['All', 'Upcoming', 'Live', 'Completed'];
 
 export default function EventsPage() {
+  const { toast } = useToast();
+  const { user } = useAuth();
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState('All');
+  const [selectedEvent, setSelectedEvent] = useState<EventActionDetails | null>(null);
+  const [events, setEvents] = useState(() => {
+    const saved = localStorage.getItem('campusos_events');
+    return saved ? JSON.parse(saved) : mockEvents;
+  });
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [registeredList, setRegisteredList] = useState<string[]>([]);
 
-  const filtered = mockEvents.filter((e) => {
+  useEffect(() => {
+    const loadRegs = () => {
+      const saved = localStorage.getItem('registeredEvents');
+      setRegisteredList(saved ? JSON.parse(saved) : []);
+    };
+    loadRegs();
+
+    window.addEventListener('campusos_event_registered', loadRegs);
+    return () => window.removeEventListener('campusos_event_registered', loadRegs);
+  }, []);
+
+  const handleCreateEvent = (e: React.FormEvent) => {
+    e.preventDefault();
+    const formData = new FormData(e.target as HTMLFormElement);
+    const title = formData.get('title') as string;
+    const date = formData.get('date') as string;
+    const time = formData.get('time') as string;
+    const location = formData.get('location') as string;
+    const tag = formData.get('tag') as string;
+
+    if (!title || !date || !time || !location) return;
+
+    const newEv = {
+      id: 'ev_' + Date.now(),
+      title,
+      date,
+      time,
+      location,
+      attendees: 0,
+      status: 'upcoming' as const,
+      tag: tag || 'General',
+    };
+
+    const updated = [newEv, ...events];
+    setEvents(updated);
+    localStorage.setItem('campusos_events', JSON.stringify(updated));
+    setIsCreateOpen(false);
+    toast({
+      title: 'Event Created Successfully',
+      description: `"${title}" has been scheduled for ${date}.`,
+      variant: 'success',
+    });
+  };
+
+  const filtered = events.filter((e: any) => {
     const matchesQuery = e.title.toLowerCase().includes(query.toLowerCase());
     const matchesFilter = filter === 'All' || e.status === filter.toLowerCase();
     return matchesQuery && matchesFilter;
   });
+
+  const canCreate = user?.role === 'lead' || user?.role === 'faculty';
 
   return (
     <div className="space-y-6">
@@ -33,7 +92,11 @@ export default function EventsPage() {
             <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">Events</h1>
             <p className="mt-1 text-sm text-ink-soft">Browse, register, and manage club events.</p>
           </div>
-          <Button leftIcon="Plus" magnetic>Create Event</Button>
+          {canCreate && (
+            <Button leftIcon="Plus" onClick={() => setIsCreateOpen(true)} magnetic>
+              Create Event
+            </Button>
+          )}
         </div>
       </FadeIn>
 
@@ -58,7 +121,7 @@ export default function EventsPage() {
       </FadeIn>
 
       <StaggerGroup className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-        {filtered.map((e) => (
+        {filtered.map((e: any) => (
           <StaggerItem key={e.id}>
             <motion.div whileHover={{ y: -6 }} className="card-surface group overflow-hidden transition-shadow hover:shadow-lift">
               <div className="relative h-32 overflow-hidden bg-gradient-to-br from-navy to-navy-400">
@@ -79,14 +142,68 @@ export default function EventsPage() {
                   <p className="inline-flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5" /> {e.location}</p>
                   <p className="inline-flex items-center gap-1.5"><Users className="h-3.5 w-3.5" /> {e.attendees} attending</p>
                 </div>
-                <Button variant="secondary" className="mt-4 w-full" size="sm">
-                  {e.status === 'completed' ? 'View recap' : e.status === 'live' ? 'Join now' : 'Register'}
-                </Button>
+                {(() => {
+                  const isRegistered = registeredList.includes(String(e.id || e.title));
+                  const isCompleted = e.status === 'completed';
+                  const isLive = e.status === 'live';
+
+                  return (
+                    <Button
+                      variant={isRegistered && !isLive ? 'outline' : 'secondary'}
+                      className="mt-4 w-full"
+                      size="sm"
+                      disabled={isRegistered && !isLive && !isCompleted}
+                      onClick={() => !isCompleted && setSelectedEvent(e)}
+                    >
+                      {isCompleted ? 'View recap' : isLive ? 'Join now' : isRegistered ? '✓ Registered' : 'Register'}
+                    </Button>
+                  );
+                })()}
               </div>
             </motion.div>
           </StaggerItem>
         ))}
       </StaggerGroup>
+      <EventActionModal event={selectedEvent} onClose={() => setSelectedEvent(null)} />
+
+      {isCreateOpen && (
+        <Modal
+          open={isCreateOpen}
+          onClose={() => setIsCreateOpen(false)}
+          title="Create New Event"
+          description="Schedule a new event for your club members"
+          size="md"
+        >
+          <form onSubmit={handleCreateEvent} className="space-y-4">
+            <div>
+              <label className="label-base">Event Title</label>
+              <input name="title" required className="input-base mt-1.5 w-full" placeholder="e.g. Hackathon Kickoff" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="label-base">Date</label>
+                <input name="date" required className="input-base mt-1.5 w-full" placeholder="e.g. Jul 20" />
+              </div>
+              <div>
+                <label className="label-base">Time</label>
+                <input name="time" required className="input-base mt-1.5 w-full" placeholder="e.g. 10:00 AM" />
+              </div>
+            </div>
+            <div>
+              <label className="label-base">Location</label>
+              <input name="location" required className="input-base mt-1.5 w-full" placeholder="e.g. Seminar Hall" />
+            </div>
+            <div>
+              <label className="label-base">Category Tag</label>
+              <input name="tag" className="input-base mt-1.5 w-full" placeholder="e.g. Workshop" />
+            </div>
+            <div className="mt-6 flex justify-end gap-3">
+              <Button variant="secondary" type="button" onClick={() => setIsCreateOpen(false)}>Cancel</Button>
+              <Button type="submit" leftIcon="Plus">Create Event</Button>
+            </div>
+          </form>
+        </Modal>
+      )}
     </div>
   );
 }

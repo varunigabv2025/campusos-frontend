@@ -31,7 +31,6 @@ export const mockPolls: Poll[] = [
       },
     ],
   },
-
   {
     id: "2",
     title: "Preferred Club Meeting Day",

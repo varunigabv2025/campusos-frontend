@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import {
   CheckCircle2, AlertCircle, Activity,
   BarChart3, FileText, Layers,
@@ -9,12 +11,16 @@ import { Button } from '../../components/ui/Button';
 import { StatCard } from '../../components/ui/StatCard';
 import { FadeIn, StaggerGroup, StaggerItem } from '../../components/ui/motion';
 import { useAuth } from '../../context/AuthContext';
+import { useToast } from '../../context/ToastContext';
+import { EventActionModal } from '../../components/events/EventActionModal';
 import {
   mockFacultyStats,
   mockClubOverviews,
   mockReports,
   mockFacultyTimeline,
   mockPendingApprovals,
+  buildMockCalendar,
+  mockEvents,
 } from '../../utils/mockData';
 
 const reportStatusTone = {
@@ -32,6 +38,14 @@ const reportTypeTone = {
 
 export default function FacultyDashboard() {
   const { user } = useAuth();
+  const { toast } = useToast();
+  const [selectedEvent, setSelectedEvent] = useState<any>(null);
+  const [events] = useState(() => {
+    const saved = localStorage.getItem('campusos_events');
+    return saved ? JSON.parse(saved) : mockEvents;
+  });
+  const calendar = buildMockCalendar(events);
+  const weekdays = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
   const firstName = user?.name?.split(' ')[0] ?? 'there';
@@ -55,8 +69,12 @@ export default function FacultyDashboard() {
             </p>
           </div>
           <div className="flex gap-2.5">
-            <Button variant="secondary" leftIcon="FileText" size="md">Reports</Button>
-            <Button leftIcon="CheckSquare" size="md" magnetic>Review Approvals</Button>
+            <Link to="/app/reports">
+              <Button variant="secondary" leftIcon="FileText" size="md">Reports</Button>
+            </Link>
+            <Link to="/app/approvals">
+              <Button leftIcon="CheckSquare" size="md" magnetic>Review Approvals</Button>
+            </Link>
           </div>
         </div>
       </FadeIn>
@@ -80,7 +98,7 @@ export default function FacultyDashboard() {
               <CardHeader
                 title="Club Performance Overview"
                 subtitle="All clubs under your coordination"
-                action={<Button variant="ghost" size="sm" rightIcon="ArrowRight">View all</Button>}
+                action={<Link to="/app/clubs"><Button variant="ghost" size="sm" rightIcon="ArrowRight">View all</Button></Link>}
               />
               <div className="space-y-3">
                 {mockClubOverviews.map((club, i) => (
@@ -144,15 +162,15 @@ export default function FacultyDashboard() {
                       <p className="truncate text-sm font-semibold text-ink">{a.title}</p>
                       <p className="text-xs text-ink-soft">From: {a.submittedBy} · {a.submittedDate}</p>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Badge tone="warning">{a.type}</Badge>
-                      <Button variant="secondary" size="sm" leftIcon="Check">Approve</Button>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            </Card>
-          </FadeIn>
+                     <div className="flex items-center gap-2">
+                       <Badge tone="warning">{a.type}</Badge>
+                       <Button variant="secondary" size="sm" leftIcon="Check" onClick={() => toast({ title: 'Approval Successful', description: `Approved "${a.title}" successfully.`, variant: 'success' })}>Approve</Button>
+                     </div>
+                   </motion.div>
+                 ))}
+               </div>
+             </Card>
+           </FadeIn>
 
           {/* Recent Reports */}
           <FadeIn delay={0.18}>
@@ -160,7 +178,7 @@ export default function FacultyDashboard() {
               <CardHeader
                 title="Recent Reports"
                 subtitle="Submitted by clubs under your oversight"
-                action={<Button variant="ghost" size="sm">View all</Button>}
+                action={<Link to="/app/reports"><Button variant="ghost" size="sm">View all</Button></Link>}
               />
               <div className="space-y-3">
                 {mockReports.map((r, i) => (
@@ -289,25 +307,36 @@ export default function FacultyDashboard() {
               <CardHeader title="Quick Actions" />
               <div className="grid grid-cols-2 gap-2.5">
                 {[
-                  { label: 'Approve',     icon: CheckCircle2, color: 'bg-success/12 text-success'       },
-                  { label: 'View Report', icon: FileText,     color: 'bg-navy/10 text-navy'             },
-                  { label: 'All Clubs',   icon: Layers,       color: 'bg-sand/30 text-[#8a6d3b]'        },
-                  { label: 'Analytics',   icon: BarChart3,    color: 'bg-warning/15 text-[#b07314]'     },
-                ].map((a, i) => (
-                  <motion.button
-                    key={a.label}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: i * 0.06 }}
-                    whileHover={{ y: -3 }}
-                    className="flex flex-col items-center gap-2 rounded-xl border border-border-soft bg-cream-100/40 p-3.5 text-center transition-all hover:border-navy/20 hover:bg-white hover:shadow-soft"
-                  >
-                    <span className={`flex h-9 w-9 items-center justify-center rounded-lg ${a.color}`}>
-                      <a.icon className="h-4 w-4" />
-                    </span>
-                    <span className="text-xs font-semibold text-ink">{a.label}</span>
-                  </motion.button>
-                ))}
+                  { label: 'Approve',     icon: CheckCircle2, color: 'bg-success/12 text-success', to: '/app/approvals' },
+                  { label: 'View Report', icon: FileText,     color: 'bg-navy/10 text-navy', to: '/app/reports' },
+                  { label: 'All Clubs',   icon: Layers,       color: 'bg-sand/30 text-[#8a6d3b]', to: '/app/clubs' },
+                  { label: 'Analytics',   icon: BarChart3,    color: 'bg-warning/15 text-[#b07314]', onClick: () => toast({ title: 'Analytics', description: 'Analytics summary: All 4 clubs are active and performing well.', variant: 'info' }) },
+                ].map((a, i) => {
+                  const content = (
+                    <motion.button
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: i * 0.06 }}
+                      whileHover={{ y: -3 }}
+                      onClick={a.onClick}
+                      className="flex w-full flex-col items-center gap-2 rounded-xl border border-border-soft bg-cream-100/40 p-3.5 text-center transition-all hover:border-navy/20 hover:bg-white hover:shadow-soft"
+                    >
+                      <span className={`flex h-9 w-9 items-center justify-center rounded-lg ${a.color}`}>
+                        <a.icon className="h-4 w-4" />
+                      </span>
+                      <span className="text-xs font-semibold text-ink">{a.label}</span>
+                    </motion.button>
+                  );
+                  return a.to ? (
+                    <Link to={a.to} key={a.label} className="w-full">
+                      {content}
+                    </Link>
+                  ) : (
+                    <div key={a.label} className="w-full">
+                      {content}
+                    </div>
+                  );
+                })}
               </div>
             </Card>
           </FadeIn>
@@ -335,8 +364,54 @@ export default function FacultyDashboard() {
               </div>
             </Card>
           </FadeIn>
+
+          {/* Calendar */}
+          <FadeIn delay={0.24}>
+            <Card>
+              <CardHeader title="Calendar" subtitle={new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })} />
+              <div className="mb-2 grid grid-cols-7 gap-1 text-center text-[0.68rem] font-semibold text-ink-soft">
+                {weekdays.map((d, i) => <div key={i}>{d}</div>)}
+              </div>
+              <div className="grid grid-cols-7 gap-1">
+                {calendar.map((d, i) => (
+                  <motion.div
+                    key={i}
+                    whileHover={d.day ? { scale: 1.08 } : {}}
+                    onClick={() => {
+                      if (d.events > 0) {
+                        const ev = events.find((e: any) =>
+                          e.date.toLowerCase() === 'jul ' + d.day ||
+                          e.date.toLowerCase() === 'jul 0' + d.day
+                        );
+                        if (ev) {
+                          setSelectedEvent(ev);
+                        }
+                      }
+                    }}
+                    className={`relative flex aspect-square items-center justify-center rounded-lg text-xs transition-colors ${
+                      d.inMonth ? 'text-ink' : 'text-ink-soft/30'
+                    } ${
+                      d.isToday
+                        ? 'bg-navy font-bold text-white shadow-soft'
+                        : d.events > 0
+                        ? 'cursor-pointer font-bold text-navy hover:bg-navy/10 ring-1 ring-navy/20'
+                        : d.day
+                        ? 'hover:bg-cream-200 cursor-pointer'
+                        : ''
+                    }`}
+                  >
+                    {d.day || ''}
+                    {d.events > 0 && !d.isToday && (
+                      <span className="absolute bottom-1 h-1.5 w-1.5 rounded-full bg-navy" />
+                    )}
+                  </motion.div>
+                ))}
+              </div>
+            </Card>
+          </FadeIn>
         </div>
       </div>
+      <EventActionModal event={selectedEvent} onClose={() => setSelectedEvent(null)} />
     </div>
   );
 }

@@ -1,12 +1,9 @@
 import { useState } from "react";
-
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
-
 import EventModal from "./EventModal";
-
 import type { PlannerEvent } from "../../types/planner";
 
 interface CalendarViewProps {
@@ -16,12 +13,11 @@ interface CalendarViewProps {
 export default function CalendarView({
   events,
 }: CalendarViewProps) {
-  const [selectedEvent, setSelectedEvent] =
-    useState<PlannerEvent | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<PlannerEvent | null>(null);
 
   return (
     <>
-      <div className="bg-white rounded-3xl shadow-lg p-5">
+      <div className="card-surface p-5 bg-white">
         <FullCalendar
           plugins={[
             dayGridPlugin,
@@ -29,7 +25,7 @@ export default function CalendarView({
             interactionPlugin,
           ]}
           initialView="dayGridMonth"
-          height={700}
+          height={640}
           dayMaxEvents={2}
           eventDisplay="block"
           headerToolbar={{
@@ -42,14 +38,17 @@ export default function CalendarView({
             "px-2",
             "py-1",
             "text-xs",
-            "font-medium",
+            "font-semibold",
+            "cursor-pointer",
+            "shadow-sm",
+            "transition-transform",
+            "hover:scale-[1.01]"
           ]}
           events={events}
           eventClick={(info) => {
             const clicked = events.find(
               (event) => event.id === info.event.id
             );
-
             if (clicked) {
               setSelectedEvent(clicked);
             }

@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import {
   Users, AlertCircle, TrendingUp,
-  CalendarDays, Plus, Bell, Activity,
+  CalendarDays, Plus, Bell, Activity, FolderKanban
 } from 'lucide-react';
 import { Card, CardHeader } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
@@ -10,6 +12,9 @@ import { Avatar } from '../../components/ui/Avatar';
 import { StatCard } from '../../components/ui/StatCard';
 import { FadeIn, StaggerGroup, StaggerItem } from '../../components/ui/motion';
 import { useAuth } from '../../context/AuthContext';
+import { useToast } from '../../context/ToastContext';
+import { Modal } from '../../components/ui/Modal';
+import { EventActionModal } from '../../components/events/EventActionModal';
 import {
   mockLeadStats,
   mockClubMembers,
@@ -19,6 +24,7 @@ import {
   mockTimeline,
   mockTodayEvents,
   buildMockCalendar,
+  mockEvents,
 } from '../../utils/mockData';
 
 const approvalTypeTone = {
@@ -32,10 +38,21 @@ const weekdays = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
 export default function LeadDashboard() {
   const { user } = useAuth();
+  const { toast } = useToast();
+  const [selectedEvent, setSelectedEvent] = useState<any>(null);
+  const [selectedProject, setSelectedProject] = useState<any>(null);
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
   const firstName = user?.name?.split(' ')[0] ?? 'there';
-  const calendar = buildMockCalendar();
+  const [events] = useState(() => {
+    const saved = localStorage.getItem('campusos_events');
+    return saved ? JSON.parse(saved) : mockEvents;
+  });
+  const [projects] = useState(() => {
+    const saved = localStorage.getItem('campusos_projects');
+    return saved ? JSON.parse(saved) : mockProjects;
+  });
+  const calendar = buildMockCalendar(events);
 
   return (
     <div className="space-y-6">
@@ -54,8 +71,12 @@ export default function LeadDashboard() {
             </p>
           </div>
           <div className="flex gap-2.5">
-            <Button variant="secondary" leftIcon="Megaphone" size="md">Announce</Button>
-            <Button leftIcon="Plus" size="md" magnetic>Create Event</Button>
+            <Link to="/app/announcements">
+              <Button variant="secondary" leftIcon="Megaphone" size="md">Announce</Button>
+            </Link>
+            <Link to="/app/events">
+              <Button leftIcon="Plus" size="md" magnetic>Create Event</Button>
+            </Link>
           </div>
         </div>
       </FadeIn>
@@ -99,7 +120,7 @@ export default function LeadDashboard() {
                     </div>
                     <div className="flex items-center gap-2">
                       <Badge tone={approvalTypeTone[a.type]}>{a.type}</Badge>
-                      <Button variant="ghost" size="sm">View</Button>
+                      <Button variant="ghost" size="sm" onClick={() => toast({ title: 'Pending Approval', description: `Viewing details for "${a.title}".`, variant: 'info' })}>View</Button>
                     </div>
                   </motion.div>
                 ))}
@@ -113,17 +134,18 @@ export default function LeadDashboard() {
               <CardHeader
                 title="Project Progress"
                 subtitle="Active club projects"
-                action={<Button variant="ghost" size="sm" rightIcon="ArrowRight">View all</Button>}
+                action={<Link to="/app/projects"><Button variant="ghost" size="sm" rightIcon="ArrowRight">View all</Button></Link>}
               />
               <div className="grid gap-3 sm:grid-cols-2">
-                {mockProjects.map((p, i) => (
+                {projects.slice(0, 4).map((p: any, i: number) => (
                   <motion.div
                     key={p.id}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.18 + i * 0.06 }}
                     whileHover={{ y: -3 }}
-                    className="rounded-xl border border-border-soft bg-white p-4 transition-shadow hover:shadow-card"
+                    onClick={() => setSelectedProject(p)}
+                    className="rounded-xl border border-border-soft bg-white p-4 transition-shadow hover:shadow-card cursor-pointer"
                   >
                     <div className="flex items-center justify-between">
                       <Badge tone={p.status === 'active' ? 'success' : p.status === 'review' ? 'warning' : p.status === 'planning' ? 'navy' : 'neutral'}>{p.status}</Badge>
@@ -243,7 +265,7 @@ export default function LeadDashboard() {
               <CardHeader
                 title="Team Members"
                 subtitle="Top active members"
-                action={<Button variant="ghost" size="sm">Manage</Button>}
+                action={<Link to="/app/members"><Button variant="ghost" size="sm">Manage</Button></Link>}
               />
               <div className="space-y-2.5">
                 {mockClubMembers.slice(0, 4).map((m, i) => (
@@ -297,9 +319,11 @@ export default function LeadDashboard() {
                     </div>
                   </motion.div>
                 ))}
-                <Button variant="secondary" className="w-full" size="sm" leftIcon="Plus">
-                  Create new event
-                </Button>
+                <Link to="/app/events" className="block w-full">
+                  <Button variant="secondary" className="w-full" size="sm" leftIcon="Plus">
+                    Create new event
+                  </Button>
+                </Link>
               </div>
             </Card>
           </FadeIn>
@@ -315,14 +339,33 @@ export default function LeadDashboard() {
                 {calendar.map((d, i) => (
                   <motion.div
                     key={i}
-                    whileHover={{ scale: 1.08 }}
+                    whileHover={d.day ? { scale: 1.08 } : {}}
+                    onClick={() => {
+                      if (d.events > 0) {
+                        const ev = events.find((e: any) =>
+                          e.date.toLowerCase() === 'jul ' + d.day ||
+                          e.date.toLowerCase() === 'jul 0' + d.day
+                        );
+                        if (ev) {
+                          setSelectedEvent(ev);
+                        }
+                      }
+                    }}
                     className={`relative flex aspect-square items-center justify-center rounded-lg text-xs transition-colors ${
                       d.inMonth ? 'text-ink' : 'text-ink-soft/30'
-                    } ${d.isToday ? 'bg-navy font-bold text-white' : d.events > 0 ? 'cursor-pointer font-semibold text-navy hover:bg-navy/10' : 'hover:bg-cream-200'}`}
+                    } ${
+                      d.isToday
+                        ? 'bg-navy font-bold text-white shadow-soft'
+                        : d.events > 0
+                        ? 'cursor-pointer font-bold text-navy hover:bg-navy/10 ring-1 ring-navy/20'
+                        : d.day
+                        ? 'hover:bg-cream-200 cursor-pointer'
+                        : ''
+                    }`}
                   >
                     {d.day || ''}
                     {d.events > 0 && !d.isToday && (
-                      <span className="absolute bottom-0.5 h-1 w-1 rounded-full bg-navy" />
+                      <span className="absolute bottom-1 h-1.5 w-1.5 rounded-full bg-navy" />
                     )}
                   </motion.div>
                 ))}
@@ -336,35 +379,120 @@ export default function LeadDashboard() {
               <CardHeader title="Quick Actions" />
               <div className="grid grid-cols-2 gap-2.5">
                 {[
-                  { label: 'New Event',    icon: 'CalendarDays', tone: 'navy'    },
-                  { label: 'Announce',     icon: 'Megaphone',    tone: 'sand'    },
-                  { label: 'Add Member',   icon: 'Users',        tone: 'success' },
-                  { label: 'New Project',  icon: 'FolderKanban', tone: 'warning' },
+                  { label: 'New Event',    icon: 'CalendarDays', tone: 'navy', to: '/app/events'    },
+                  { label: 'Announce',     icon: 'Megaphone',    tone: 'sand', to: '/app/announcements'    },
+                  { label: 'Add Member',   icon: 'Users',        tone: 'success', to: '/app/members' },
+                  { label: 'New Project',  icon: 'FolderKanban', tone: 'warning', to: '/app/projects' },
                 ].map((a, i) => (
-                  <motion.button
-                    key={a.label}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: i * 0.06 }}
-                    whileHover={{ y: -3 }}
-                    className="flex flex-col items-center gap-2 rounded-xl border border-border-soft bg-cream-100/40 p-3.5 text-center transition-all hover:border-navy/20 hover:bg-white hover:shadow-soft"
-                  >
-                    <span className={`flex h-9 w-9 items-center justify-center rounded-lg ${
-                      a.tone === 'navy' ? 'bg-navy/10 text-navy' :
-                      a.tone === 'success' ? 'bg-success/12 text-success' :
-                      a.tone === 'sand' ? 'bg-sand/30 text-[#8a6d3b]' :
-                      'bg-warning/15 text-[#b07314]'
-                    }`}>
-                      <Plus className="h-4 w-4" />
-                    </span>
-                    <span className="text-xs font-semibold text-ink">{a.label}</span>
-                  </motion.button>
+                  <Link to={a.to} key={a.label} className="w-full">
+                    <motion.button
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: i * 0.06 }}
+                      whileHover={{ y: -3 }}
+                      className="flex w-full flex-col items-center gap-2 rounded-xl border border-border-soft bg-cream-100/40 p-3.5 text-center transition-all hover:border-navy/20 hover:bg-white hover:shadow-soft"
+                    >
+                      <span className={`flex h-9 w-9 items-center justify-center rounded-lg ${
+                        a.tone === 'navy' ? 'bg-navy/10 text-navy' :
+                        a.tone === 'success' ? 'bg-success/12 text-success' :
+                        a.tone === 'sand' ? 'bg-sand/30 text-[#8a6d3b]' :
+                        'bg-warning/15 text-[#b07314]'
+                      }`}>
+                        <Plus className="h-4 w-4" />
+                      </span>
+                      <span className="text-xs font-semibold text-ink">{a.label}</span>
+                    </motion.button>
+                  </Link>
                 ))}
               </div>
             </Card>
           </FadeIn>
         </div>
       </div>
+      <EventActionModal event={selectedEvent} onClose={() => setSelectedEvent(null)} />
+
+      {selectedProject && (
+        <Modal
+          open={!!selectedProject}
+          onClose={() => setSelectedProject(null)}
+          title="Project Details"
+          description="Status and contributor details for this club project"
+          size="md"
+        >
+          <div className="space-y-5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-navy/10 text-navy">
+                  <FolderKanban className="h-5 w-5" />
+                </span>
+                <div>
+                  <h3 className="text-base font-bold text-ink">{selectedProject.name}</h3>
+                  <p className="text-xs text-ink-soft">{selectedProject.tag || 'Club Project'}</p>
+                </div>
+              </div>
+              <Badge tone={selectedProject.status === 'active' ? 'success' : selectedProject.status === 'review' ? 'warning' : selectedProject.status === 'planning' ? 'navy' : 'neutral'} dot>
+                {selectedProject.status}
+              </Badge>
+            </div>
+
+            <div>
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-ink-soft">Description</h4>
+              <p className="mt-1 text-sm text-ink-soft/90 leading-relaxed">{selectedProject.description}</p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 rounded-xl border border-border-soft bg-cream-100/40 p-4">
+              <div>
+                <p className="text-xs text-ink-soft font-medium">Due Date</p>
+                <p className="mt-0.5 text-sm font-semibold text-ink inline-flex items-center gap-1.5">
+                  <CalendarDays className="h-4 w-4 text-navy" /> {selectedProject.dueDate}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-ink-soft font-medium">Progress</p>
+                <div className="mt-1 flex items-center gap-2">
+                  <div className="h-2 flex-1 overflow-hidden rounded-full bg-beige">
+                    <div
+                      className="h-full rounded-full bg-navy"
+                      style={{ width: `${selectedProject.progress}%` }}
+                    />
+                  </div>
+                  <span className="text-xs font-bold text-ink">{selectedProject.progress}%</span>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-ink-soft mb-3">
+                Team Members Working on this Project ({selectedProject.members || 3})
+              </h4>
+              <div className="space-y-2.5">
+                {[
+                  { name: 'Aarav Mehta', role: 'Project Lead', avatar: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=128&h=128&fit=crop' },
+                  { name: 'Diya Sharma', role: 'UI/UX Designer', avatar: 'https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&cs=tinysrgb&w=128&h=128&fit=crop' },
+                  { name: 'Sara Khan', role: 'Frontend Developer', avatar: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=128&h=128&fit=crop' },
+                ].slice(0, selectedProject.members ? Math.min(selectedProject.members, 3) : 3).map((member) => (
+                  <div key={member.name} className="flex items-center justify-between rounded-xl border border-border-soft/60 bg-white p-3 shadow-sm">
+                    <div className="flex items-center gap-3">
+                      <Avatar name={member.name} src={member.avatar} size="sm" />
+                      <div>
+                        <p className="text-sm font-semibold text-ink">{member.name}</p>
+                        <p className="text-xs text-ink-soft">{member.role}</p>
+                      </div>
+                    </div>
+                    <Badge tone="success">Active</Badge>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-2">
+              <Button variant="secondary" onClick={() => setSelectedProject(null)}>
+                Close
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }

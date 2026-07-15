@@ -1,4 +1,5 @@
-import { CalendarDays, Plus } from "lucide-react";
+import { CalendarDays } from "lucide-react";
+import { Button } from "../ui/Button";
 
 interface PlannerHeaderProps {
   showCreate?: boolean;
@@ -10,32 +11,30 @@ export default function PlannerHeader({
   onCreate,
 }: PlannerHeaderProps) {
   return (
-    <div className="flex items-center justify-between mb-8">
+    <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
       <div>
-        <div className="flex items-center gap-3">
-          <CalendarDays className="w-8 h-8 text-blue-700" />
-
-          <h1 className="text-3xl font-bold text-slate-900">
+        <div className="flex items-center gap-2.5">
+          <CalendarDays className="h-7 w-7 text-navy animate-pulse" />
+          <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">
             Campus Planner
           </h1>
         </div>
-
-        <p className="mt-2 text-slate-500">
-          Manage events, meetings and deadlines across CampusOS.
+        <p className="mt-1 text-sm text-ink-soft">
+          Manage events, meetings, and deadlines across CampusOS.
         </p>
       </div>
 
       {showCreate && (
-        <button
+        <Button
+          leftIcon="Plus"
           onClick={() => {
-  console.log("BUTTON CLICKED");
-  onCreate?.();
-}}
-          className="flex items-center gap-2 rounded-xl bg-blue-700 px-5 py-3 font-medium text-white transition hover:bg-blue-800"
+            console.log("BUTTON CLICKED");
+            onCreate?.();
+          }}
+          magnetic
         >
-          <Plus size={18} />
           Create Event
-        </button>
+        </Button>
       )}
     </div>
   );

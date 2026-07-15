@@ -1,11 +1,7 @@
-import {
-  CalendarDays,
-  Users,
-  ClipboardList,
-  Clock,
-} from "lucide-react";
-
+import { CalendarDays, Users, ClipboardList, Clock } from "lucide-react";
 import type { PlannerEvent } from "../../types/planner";
+import { useCountUp } from "../../hooks";
+import { motion } from "framer-motion";
 
 interface Props {
   events: PlannerEvent[];
@@ -30,52 +26,55 @@ export default function StatsCards({ events }: Props) {
       title: "Events",
       value: events.length,
       icon: CalendarDays,
-      color: "bg-blue-100 text-blue-700",
+      color: "bg-navy/10 text-navy",
     },
     {
       title: "Participants",
       value: totalParticipants,
       icon: Users,
-      color: "bg-green-100 text-green-700",
+      color: "bg-success/10 text-success",
     },
     {
       title: "Meetings",
       value: meetings,
       icon: ClipboardList,
-      color: "bg-yellow-100 text-yellow-700",
+      color: "bg-warning/10 text-[#b07314]",
     },
     {
       title: "Deadlines",
       value: deadlines,
       icon: Clock,
-      color: "bg-red-100 text-red-700",
+      color: "bg-danger/10 text-danger",
     },
   ];
 
   return (
-    <div className="grid grid-cols-4 gap-6 mb-8">
+    <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
       {stats.map((item) => {
         const Icon = item.icon;
+        const val = useCountUp(item.value, 1000, true);
 
         return (
-          <div
+          <motion.div
             key={item.title}
-            className="bg-white rounded-2xl shadow-md p-6 hover:shadow-xl transition-all"
+            whileHover={{ y: -4 }}
+            className="card-surface flex items-center gap-4 p-5 transition-shadow hover:shadow-lift"
           >
-            <div
-              className={`w-14 h-14 rounded-xl flex items-center justify-center ${item.color}`}
+            <span
+              className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${item.color}`}
             >
-              <Icon size={28} />
+              <Icon size={24} />
+            </span>
+
+            <div>
+              <p className="text-2xl font-bold tracking-tight text-ink">
+                {val.toLocaleString()}
+              </p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-ink-soft/75">
+                {item.title}
+              </p>
             </div>
-
-            <h2 className="text-3xl font-bold mt-5">
-              {item.value}
-            </h2>
-
-            <p className="text-slate-500 mt-1">
-              {item.title}
-            </p>
-          </div>
+          </motion.div>
         );
       })}
     </div>

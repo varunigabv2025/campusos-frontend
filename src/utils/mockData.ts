@@ -62,15 +62,29 @@ export const mockNotifications: NotificationItem[] = [
   { id: 'n4', title: 'Pending approval',      description: 'Budget request awaiting coordinator approval.',        time: '1d ago',  read: true,  variant: 'warning' },
 ];
 
-export function buildMockCalendar(): CalendarDay[] {
+export function buildMockCalendar(eventsList?: any[]): CalendarDay[] {
   const days: CalendarDay[] = [];
   const today = new Date().getDate();
   const offset = 2; // Tuesday start
+
+  const eventDays: number[] = [];
+  if (eventsList) {
+    eventsList.forEach((e) => {
+      const parts = e.date.split(' ');
+      if (parts.length === 2) {
+        const dayNum = parseInt(parts[1], 10);
+        if (!isNaN(dayNum)) eventDays.push(dayNum);
+      }
+    });
+  } else {
+    eventDays.push(12, 18, 25, 28);
+  }
+
   for (let i = 0; i < offset; i++) days.push({ day: 0, events: 0, isToday: false, inMonth: false });
   for (let d = 1; d <= 31; d++) {
     days.push({
       day: d,
-      events: [3, 7, 12, 15, 18, 22, 27].includes(d) ? 1 : 0,
+      events: eventDays.includes(d) ? 1 : 0,
       isToday: d === today,
       inMonth: true,
     });

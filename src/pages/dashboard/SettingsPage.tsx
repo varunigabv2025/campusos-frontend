@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { User, Bell, Shield, Palette, Check } from 'lucide-react';
+import { User, Bell, Shield, Palette, Check, Upload, Link2, Image } from 'lucide-react';
 import { Card, CardHeader } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
@@ -10,6 +10,7 @@ import { Badge } from '../../components/ui/Badge';
 import { FadeIn } from '../../components/ui/motion';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
+import { Modal } from '../../components/ui/Modal';
 
 const sections = [
   { id: 'profile', label: 'Profile', icon: User },
@@ -17,6 +18,17 @@ const sections = [
   { id: 'security', label: 'Security', icon: Shield },
   { id: 'appearance', label: 'Appearance', icon: Palette },
 ];
+
+const presetAvatars = [
+  { name: 'Alex', url: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=128&h=128&fit=crop' },
+  { name: 'Priya', url: 'https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&cs=tinysrgb&w=128&h=128&fit=crop' },
+  { name: 'Rohan', url: 'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=128&h=128&fit=crop' },
+  { name: 'Sara', url: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=128&h=128&fit=crop' },
+  { name: 'Arjun', url: 'https://images.pexels.com/photos/91227/pexels-photo-91227.jpeg?auto=compress&cs=tinysrgb&w=128&h=128&fit=crop' },
+  { name: 'Nisha', url: 'https://images.pexels.com/photos/1130626/pexels-photo-1130626.jpeg?auto=compress&cs=tinysrgb&w=128&h=128&fit=crop' },
+];
+
+type AvatarTab = 'preset' | 'upload' | 'url';
 
 export default function SettingsPage() {
   const { user, updateUser } = useAuth();
@@ -27,10 +39,87 @@ export default function SettingsPage() {
   const [notif, setNotif] = useState({ email: true, push: true, weekly: false, mentions: true });
   const [theme, setTheme] = useState('light');
 
+  // Avatar state
+  const [avatarOpen, setAvatarOpen] = useState(false);
+  const [avatarTab, setAvatarTab] = useState<AvatarTab>('preset');
+  const [selectedAvatar, setSelectedAvatar] = useState(user?.avatarUrl ?? '');
+  const [customAvatarUrl, setCustomAvatarUrl] = useState('');
+  const [uploadedPreview, setUploadedPreview] = useState('');
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Password Security state
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+
   const saveProfile = () => {
     updateUser({ name, email });
     toast({ title: 'Settings saved', variant: 'success' });
   };
+
+  const handleFileChange = (file: File | null) => {
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      toast({ title: 'Please select an image file', variant: 'error' });
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast({ title: 'Image must be under 5MB', variant: 'error' });
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const result = e.target?.result as string;
+      setUploadedPreview(result);
+      setSelectedAvatar(result);
+      setCustomAvatarUrl('');
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const saveAvatar = () => {
+    const url = avatarTab === 'url' ? customAvatarUrl : avatarTab === 'upload' ? uploadedPreview : selectedAvatar;
+    if (url) {
+      updateUser({ avatarUrl: url });
+      toast({ title: 'Profile picture updated', variant: 'success' });
+    }
+    setAvatarOpen(false);
+  };
+
+  const handleUpdatePassword = () => {
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      toast({ title: 'Please fill in all password fields', variant: 'error' });
+      return;
+    }
+    const savedPassword = localStorage.getItem('campusos_password_' + user?.email) || 'password';
+    if (currentPassword !== savedPassword) {
+      toast({ title: 'Current password is incorrect', variant: 'error' });
+      return;
+    }
+    if (newPassword.length < 6) {
+      toast({ title: 'New password must be at least 6 characters', variant: 'error' });
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast({ title: 'Passwords do not match', variant: 'error' });
+      return;
+    }
+    localStorage.setItem('campusos_password_' + user?.email, newPassword);
+    toast({ title: 'Password updated successfully', variant: 'success' });
+    setCurrentPassword('');
+    setNewPassword('');
+    setConfirmPassword('');
+  };
+
+  // Compute the active preview for the avatar modal
+  const activePreview = avatarTab === 'url' ? (customAvatarUrl || user?.avatarUrl || '') : avatarTab === 'upload' ? (uploadedPreview || user?.avatarUrl || '') : (selectedAvatar || user?.avatarUrl || '');
+
+  const avatarTabs: { id: AvatarTab; label: string; icon: typeof Upload }[] = [
+    { id: 'preset', label: 'Presets', icon: Image },
+    { id: 'upload', label: 'Upload', icon: Upload },
+    { id: 'url', label: 'URL', icon: Link2 },
+  ];
 
   return (
     <div className="space-y-6">
@@ -68,15 +157,19 @@ export default function SettingsPage() {
                 <div className="flex items-center gap-4">
                   <Avatar name={user?.name ?? 'User'} src={user?.avatarUrl} size="lg" />
                   <div>
-                    <Button variant="secondary" size="sm" leftIcon="Upload">Change photo</Button>
-                    <p className="mt-1.5 text-xs text-ink-soft">JPG or PNG. Max 2MB.</p>
+                    <Button variant="secondary" size="sm" leftIcon="Upload" onClick={() => { setSelectedAvatar(user?.avatarUrl ?? ''); setCustomAvatarUrl(''); setUploadedPreview(''); setAvatarTab('preset'); setAvatarOpen(true); }}>Change photo</Button>
+                    <p className="mt-1.5 text-xs text-ink-soft">JPG, PNG or GIF. Max 5MB.</p>
                   </div>
                 </div>
                 <div className="mt-5 grid gap-4 sm:grid-cols-2">
                   <Input label="Full name" value={name} onChange={(e) => setName(e.target.value)} />
                   <Input label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
                   <Input label="Department" defaultValue={user?.department} disabled />
-                  <Input label="Year" defaultValue={user?.year} disabled />
+                  {user?.role === 'faculty' ? (
+                    <Input label="Designation" defaultValue={user?.designation ?? 'Faculty Coordinator'} disabled />
+                  ) : (
+                    <Input label="Year" defaultValue={user?.year} disabled />
+                  )}
                 </div>
                 <div className="mt-5 flex justify-end">
                   <Button onClick={saveProfile} leftIcon="Check">Save changes</Button>
@@ -117,15 +210,15 @@ export default function SettingsPage() {
               <Card>
                 <CardHeader title="Security" subtitle="Keep your account safe" />
                 <div className="space-y-4">
-                  <Input label="Current password" type="password" placeholder="••••••••" leftIcon="Lock" />
-                  <Input label="New password" type="password" placeholder="••••••••" leftIcon="Lock" />
-                  <Input label="Confirm new password" type="password" placeholder="••••••••" leftIcon="Lock" />
+                  <Input label="Current password" type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} placeholder="••••••••" leftIcon="Lock" />
+                  <Input label="New password" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="••••••••" leftIcon="Lock" />
+                  <Input label="Confirm new password" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="••••••••" leftIcon="Lock" />
                   <div className="flex items-center gap-2 rounded-xl border border-border-soft bg-cream-100/40 p-3">
                     <Shield className="h-4 w-4 text-success" />
                     <span className="text-sm text-ink-soft">Two-factor authentication is</span>
                     <Badge tone="success" dot>Enabled</Badge>
                   </div>
-                  <Button leftIcon="Check">Update password</Button>
+                  <Button leftIcon="Check" onClick={handleUpdatePassword}>Update password</Button>
                 </div>
               </Card>
             </FadeIn>
@@ -160,6 +253,154 @@ export default function SettingsPage() {
           )}
         </div>
       </div>
+
+      {/* ── Avatar Modal ── */}
+      <Modal
+        open={avatarOpen}
+        onClose={() => setAvatarOpen(false)}
+        title="Update profile picture"
+        description="Choose from presets, upload from device, or paste a URL"
+        size="md"
+      >
+        {/* Live preview */}
+        <div className="mb-5 flex items-center gap-4 rounded-2xl border border-border-soft/60 bg-cream-100/40 p-4">
+          <div className="relative">
+            <Avatar name={user?.name ?? 'User'} src={activePreview || undefined} size="xl" ring />
+            <span className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-navy text-white shadow">
+              <Check className="h-3 w-3" />
+            </span>
+          </div>
+          <div>
+            <p className="text-sm font-bold text-ink">{user?.name}</p>
+            <p className="text-xs text-ink-soft">{activePreview ? 'New photo selected' : 'No photo selected yet'}</p>
+          </div>
+        </div>
+
+        {/* Tab switcher */}
+        <div className="mb-4 flex gap-1.5 rounded-xl bg-cream-100/60 p-1">
+          {avatarTabs.map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setAvatarTab(tab.id)}
+              className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-bold transition-all duration-200 ${
+                avatarTab === tab.id
+                  ? 'bg-white text-navy shadow-sm'
+                  : 'text-ink-soft hover:text-navy'
+              }`}
+            >
+              <tab.icon className="h-3.5 w-3.5" />
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Tab content */}
+        {avatarTab === 'preset' && (
+          <div className="grid grid-cols-3 gap-3">
+            {presetAvatars.map((av) => (
+              <button
+                key={av.name}
+                type="button"
+                onClick={() => { setSelectedAvatar(av.url); setUploadedPreview(''); setCustomAvatarUrl(''); }}
+                className={`group relative flex flex-col items-center gap-2 overflow-hidden rounded-2xl border-2 p-3 transition-all duration-200 ${
+                  selectedAvatar === av.url && avatarTab === 'preset'
+                    ? 'border-navy bg-navy/5 shadow-md'
+                    : 'border-border-soft hover:border-navy/30 hover:bg-cream-100/60'
+                }`}
+              >
+                {selectedAvatar === av.url && avatarTab === 'preset' && (
+                  <span className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-navy">
+                    <Check className="h-3 w-3 text-white" />
+                  </span>
+                )}
+                <Avatar name={av.name} src={av.url} size="md" />
+                <span className="text-[0.7rem] font-semibold text-ink-soft">{av.name}</span>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {avatarTab === 'upload' && (
+          <div className="space-y-3">
+            {/* Drag-drop zone */}
+            <div
+              onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+              onDragLeave={() => setIsDragging(false)}
+              onDrop={(e) => { e.preventDefault(); setIsDragging(false); handleFileChange(e.dataTransfer.files[0] ?? null); }}
+              onClick={() => fileInputRef.current?.click()}
+              className={`flex cursor-pointer flex-col items-center gap-3 rounded-2xl border-2 border-dashed p-8 text-center transition-all duration-200 ${
+                isDragging
+                  ? 'border-navy bg-navy/5 scale-[1.01]'
+                  : 'border-border-soft bg-cream-100/30 hover:border-navy/40 hover:bg-cream-100/60'
+              }`}
+            >
+              {uploadedPreview ? (
+                <>
+                  <img src={uploadedPreview} alt="Preview" className="h-20 w-20 rounded-full object-cover shadow-md ring-2 ring-navy/20" />
+                  <p className="text-xs font-semibold text-success">Image uploaded!</p>
+                  <p className="text-xs text-ink-soft">Click to change</p>
+                </>
+              ) : (
+                <>
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-navy/8 text-navy">
+                    <Upload className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-ink">Drop your photo here</p>
+                    <p className="mt-0.5 text-xs text-ink-soft">or click to browse from device</p>
+                  </div>
+                  <p className="text-[0.7rem] text-ink-soft/60">JPG, PNG, GIF up to 5 MB</p>
+                </>
+              )}
+            </div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => handleFileChange(e.target.files?.[0] ?? null)}
+            />
+            {uploadedPreview && (
+              <Button variant="secondary" size="sm" onClick={() => { setUploadedPreview(''); setSelectedAvatar(''); }} className="w-full">
+                Remove photo
+              </Button>
+            )}
+          </div>
+        )}
+
+        {avatarTab === 'url' && (
+          <div className="space-y-3">
+            <div>
+              <label className="label-base">Paste image URL</label>
+              <input
+                type="text"
+                className="input-base w-full"
+                placeholder="https://example.com/my-photo.jpg"
+                value={customAvatarUrl}
+                onChange={(e) => { setCustomAvatarUrl(e.target.value); setUploadedPreview(''); }}
+              />
+            </div>
+            {customAvatarUrl && (
+              <div className="overflow-hidden rounded-2xl border border-border-soft/60">
+                <img
+                  src={customAvatarUrl}
+                  alt="URL preview"
+                  className="h-36 w-full object-cover"
+                  onError={(e) => { (e.target as HTMLImageElement).src = ''; }}
+                />
+              </div>
+            )}
+            <p className="text-xs text-ink-soft">Enter a direct link to any publicly accessible image.</p>
+          </div>
+        )}
+
+        {/* Action buttons */}
+        <div className="mt-6 flex gap-3">
+          <Button variant="secondary" className="flex-1" onClick={() => setAvatarOpen(false)}>Cancel</Button>
+          <Button className="flex-1" leftIcon="Check" onClick={saveAvatar}>Save picture</Button>
+        </div>
+      </Modal>
     </div>
   );
 }

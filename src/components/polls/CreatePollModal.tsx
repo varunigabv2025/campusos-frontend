@@ -1,6 +1,8 @@
 import { useState } from "react";
-import { Plus, Trash2, X } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { useToast } from "../../context/ToastContext";
+import { Modal } from "../ui/Modal";
+import { Button } from "../ui/Button";
 import type { Poll } from "../../types/poll";
 
 interface Props {
@@ -19,18 +21,9 @@ export default function CreatePollModal({
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [expiresAt, setExpiresAt] = useState("");
+  const [options, setOptions] = useState(["", ""]);
 
-  const [options, setOptions] = useState([
-    "",
-    "",
-  ]);
-
-  if (!open) return null;
-
-  const updateOption = (
-    index: number,
-    value: string
-  ) => {
+  const updateOption = (index: number, value: string) => {
     const copy = [...options];
     copy[index] = value;
     setOptions(copy);
@@ -42,7 +35,6 @@ export default function CreatePollModal({
 
   const removeOption = (index: number) => {
     if (options.length <= 2) return;
-
     setOptions(options.filter((_, i) => i !== index));
   };
 
@@ -50,24 +42,19 @@ export default function CreatePollModal({
     if (!title || !description || !expiresAt) {
       toast({
         title: "Missing Information",
-        description: "Fill all fields.",
+        description: "Please fill all fields.",
         variant: "warning",
       });
       return;
     }
 
-    const validOptions = options.filter(
-      (o) => o.trim() !== ""
-    );
-
+    const validOptions = options.filter((o) => o.trim() !== "");
     if (validOptions.length < 2) {
       toast({
         title: "Need Options",
-        description:
-          "Add at least two poll options.",
+        description: "Add at least two poll options.",
         variant: "warning",
       });
-
       return;
     }
 
@@ -78,7 +65,6 @@ export default function CreatePollModal({
       createdBy: "Club Lead",
       expiresAt,
       isActive: true,
-
       options: validOptions.map((text, index) => ({
         id: (index + 1).toString(),
         text,
@@ -98,133 +84,90 @@ export default function CreatePollModal({
     setDescription("");
     setExpiresAt("");
     setOptions(["", ""]);
-
     onClose();
   };
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40">
-
-      <div className="w-[700px] rounded-3xl bg-white p-8 shadow-2xl">
-
-        <div className="mb-6 flex items-center justify-between">
-
-          <h1 className="text-3xl font-bold">
-            Create Poll
-          </h1>
-
-          <button onClick={onClose}>
-            <X />
-          </button>
-
-        </div>
-
-        <div className="space-y-5">
-
+    <Modal
+      open={open}
+      onClose={onClose}
+      title="Create New Poll"
+      description="Gather feedback or vote on club decisions"
+      size="md"
+    >
+      <div className="space-y-4">
+        <div>
+          <label className="label-base">Poll Title</label>
           <input
             value={title}
-            onChange={(e) =>
-              setTitle(e.target.value)
-            }
-            placeholder="Poll Title"
-            className="w-full rounded-xl border p-3"
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="e.g. Preferred Weekly Meeting Day"
+            className="input-base w-full"
           />
+        </div>
 
+        <div>
+          <label className="label-base">Description</label>
           <textarea
             value={description}
-            onChange={(e) =>
-              setDescription(e.target.value)
-            }
-            rows={3}
-            placeholder="Description"
-            className="w-full rounded-xl border p-3"
+            onChange={(e) => setDescription(e.target.value)}
+            rows={2}
+            placeholder="Provide context or instructions for voters..."
+            className="input-base w-full resize-none"
           />
+        </div>
 
+        <div>
+          <label className="label-base">Expires At</label>
           <input
             type="date"
             value={expiresAt}
-            onChange={(e) =>
-              setExpiresAt(e.target.value)
-            }
-            className="w-full rounded-xl border p-3"
+            onChange={(e) => setExpiresAt(e.target.value)}
+            className="input-base w-full"
           />
+        </div>
 
-          <div>
-
-            <h3 className="mb-4 text-lg font-semibold">
-              Poll Options
-            </h3>
-
-            <div className="space-y-3">
-
-              {options.map((option, index) => (
-
-                <div
-                  key={index}
-                  className="flex gap-3"
+        <div>
+          <label className="label-base">Poll Options</label>
+          <div className="space-y-2.5 max-h-[160px] overflow-y-auto pr-1">
+            {options.map((option, index) => (
+              <div key={index} className="flex gap-2">
+                <input
+                  value={option}
+                  onChange={(e) => updateOption(index, e.target.value)}
+                  placeholder={`Option ${index + 1}`}
+                  className="input-base flex-1"
+                />
+                <button
+                  type="button"
+                  onClick={() => removeOption(index)}
+                  disabled={options.length <= 2}
+                  className="flex h-11 w-11 items-center justify-center rounded-xl border border-danger/10 bg-danger/5 text-danger transition-colors hover:bg-danger/10 disabled:opacity-40 disabled:cursor-not-allowed"
                 >
-
-                  <input
-                    value={option}
-                    onChange={(e) =>
-                      updateOption(
-                        index,
-                        e.target.value
-                      )
-                    }
-                    placeholder={`Option ${
-                      index + 1
-                    }`}
-                    className="flex-1 rounded-xl border p-3"
-                  />
-
-                  <button
-                    onClick={() =>
-                      removeOption(index)
-                    }
-                    className="rounded-xl bg-red-100 p-3 text-red-600"
-                  >
-                    <Trash2 size={18} />
-                  </button>
-
-                </div>
-
-              ))}
-
-            </div>
-
-            <button
-              onClick={addOption}
-              className="mt-4 flex items-center gap-2 rounded-xl bg-slate-200 px-4 py-2"
-            >
-              <Plus size={18} />
-              Add Option
-            </button>
-
+                  <Trash2 size={16} />
+                </button>
+              </div>
+            ))}
           </div>
 
+          <button
+            type="button"
+            onClick={addOption}
+            className="mt-3 flex items-center gap-1.5 rounded-lg border border-border-soft px-3 py-1.5 text-xs font-bold text-navy hover:bg-navy/5"
+          >
+            <Plus size={14} /> Add Option
+          </button>
         </div>
 
-        <div className="mt-8 flex justify-end gap-4">
-
-          <button
-            onClick={onClose}
-            className="rounded-xl border px-6 py-3"
-          >
+        <div className="mt-6 flex justify-end gap-3">
+          <Button variant="secondary" onClick={onClose}>
             Cancel
-          </button>
-
-          <button
-            onClick={handleCreate}
-            className="rounded-xl bg-blue-700 px-6 py-3 text-white hover:bg-blue-800"
-          >
+          </Button>
+          <Button onClick={handleCreate} leftIcon="Check">
             Create Poll
-          </button>
-
+          </Button>
         </div>
-
       </div>
-
-    </div>
+    </Modal>
   );
 }

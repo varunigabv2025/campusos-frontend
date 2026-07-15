@@ -10,6 +10,8 @@ export interface User {
   club?: string;
   avatarUrl?: string;
   bio?: string;
+  coverTheme?: 'navy' | 'violet' | 'emerald' | 'sunset' | 'tech' | 'design' | 'campus' | 'abstract';
+  coverImage?: string;
   skills?: string[];
   achievements?: Achievement[];
   badges?: Badge[];
@@ -189,3 +191,4 @@ export interface ReportItem {
   date: string;
   status: 'submitted' | 'reviewed' | 'approved';
 }
+

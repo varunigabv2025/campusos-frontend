@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { X } from "lucide-react";
-
 import { useToast } from "../../context/ToastContext";
 import type { PlannerEvent } from "../../types/planner";
+import { Modal } from "../ui/Modal";
+import { Button } from "../ui/Button";
 
 interface Props {
   open: boolean;
@@ -19,21 +19,15 @@ export default function CreateEventModal({
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-
   const [startDate, setStartDate] = useState("");
   const [startTime, setStartTime] = useState("");
-
   const [endDate, setEndDate] = useState("");
   const [endTime, setEndTime] = useState("");
-
   const [venue, setVenue] = useState("");
   const [organizer, setOrganizer] = useState("");
-
   const [category, setCategory] = useState<
     "Workshop" | "Meeting" | "Competition" | "Hackathon" | "Deadline"
   >("Workshop");
-
-  if (!open) return null;
 
   const colorMap = {
     Workshop: "#22c55e",
@@ -46,16 +40,12 @@ export default function CreateEventModal({
   const resetForm = () => {
     setTitle("");
     setDescription("");
-
     setStartDate("");
     setStartTime("");
-
     setEndDate("");
     setEndTime("");
-
     setVenue("");
     setOrganizer("");
-
     setCategory("Workshop");
   };
 
@@ -72,7 +62,6 @@ export default function CreateEventModal({
         description: "Please fill all required fields.",
         variant: "warning",
       });
-
       return;
     }
 
@@ -81,23 +70,14 @@ export default function CreateEventModal({
 
     const event: PlannerEvent = {
       id: Date.now().toString(),
-
       title,
-
       description,
-
       category,
-
       start: `${startDate}T${startTime}:00`,
-
       end: `${finalEndDate}T${finalEndTime}:00`,
-
       venue,
-
       organizer,
-
       participants: 0,
-
       color: colorMap[category],
     };
 
@@ -110,163 +90,150 @@ export default function CreateEventModal({
     });
 
     resetForm();
-
     onClose();
   };
 
   return (
-  <div className="fixed inset-0 z-[9999] flex items-center justify-center overflow-y-auto bg-black/50 p-6 backdrop-blur-sm">
-    <div className="relative max-h-[90vh] w-[700px] overflow-y-auto rounded-3xl bg-white p-8 shadow-2xl">
-      <button
-        onClick={() => {
-          resetForm();
-          onClose();
-        }}
-        className="absolute right-6 top-6 rounded-lg p-2 hover:bg-slate-100"
-      >
-        <X />
-      </button>
+    <Modal
+      open={open}
+      onClose={() => {
+        resetForm();
+        onClose();
+      }}
+      title="Create New Planner Event"
+      description="Add an event, meeting, or deadline to the campus planner"
+      size="md"
+    >
+      <div className="space-y-4">
+        <div>
+          <label className="label-base">Event Title *</label>
+          <input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="e.g. AI Workshop Series"
+            className="input-base w-full"
+            required
+          />
+        </div>
 
-      <h1 className="text-3xl font-bold text-slate-800">
-        Create New Event
-      </h1>
+        <div>
+          <label className="label-base">Description</label>
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            rows={2}
+            placeholder="Provide event details..."
+            className="input-base w-full resize-none"
+          />
+        </div>
 
-      <p className="mt-2 text-slate-500">
-        Add a new event to the Campus Planner
-      </p>
-
-     <div className="mt-8 max-h-[60vh] space-y-5 overflow-y-auto pr-2">
-
-        <input
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="Event Title"
-          className="w-full rounded-xl border border-slate-300 p-3 outline-none focus:border-blue-600"
-        />
-
-        <textarea
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          rows={3}
-          placeholder="Description"
-          className="w-full rounded-xl border border-slate-300 p-3 outline-none focus:border-blue-600 resize-none"
-        />
-
-        <div className="grid grid-cols-2 gap-4">
-
+        <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="mb-2 block text-sm font-semibold">
-              Start Date
-            </label>
-
+            <label className="label-base">Start Date *</label>
             <input
               type="date"
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
-              className="w-full rounded-xl border border-slate-300 p-3"
+              className="input-base w-full"
+              required
             />
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-semibold">
-              Start Time
-            </label>
-
+            <label className="label-base">Start Time *</label>
             <input
               type="time"
               value={startTime}
               onChange={(e) => setStartTime(e.target.value)}
-              className="w-full rounded-xl border border-slate-300 p-3"
+              className="input-base w-full"
+              required
             />
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-semibold">
-              End Date
-            </label>
-
+            <label className="label-base">End Date</label>
             <input
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
-              className="w-full rounded-xl border border-slate-300 p-3"
+              className="input-base w-full"
             />
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-semibold">
-              End Time
-            </label>
-
+            <label className="label-base">End Time</label>
             <input
               type="time"
               value={endTime}
               onChange={(e) => setEndTime(e.target.value)}
-              className="w-full rounded-xl border border-slate-300 p-3"
+              className="input-base w-full"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="label-base">Venue *</label>
+            <input
+              value={venue}
+              onChange={(e) => setVenue(e.target.value)}
+              placeholder="e.g. Seminar Hall"
+              className="input-base w-full"
+              required
             />
           </div>
 
+          <div>
+            <label className="label-base">Organizer *</label>
+            <input
+              value={organizer}
+              onChange={(e) => setOrganizer(e.target.value)}
+              placeholder="e.g. Computer Society"
+              className="input-base w-full"
+              required
+            />
+          </div>
         </div>
 
-        <input
-          value={venue}
-          onChange={(e) => setVenue(e.target.value)}
-          placeholder="Venue"
-          className="w-full rounded-xl border border-slate-300 p-3 outline-none focus:border-blue-600"
-        />
+        <div>
+          <label className="label-base">Category</label>
+          <select
+            value={category}
+            onChange={(e) =>
+              setCategory(
+                e.target.value as
+                  | "Workshop"
+                  | "Meeting"
+                  | "Competition"
+                  | "Hackathon"
+                  | "Deadline"
+              )
+            }
+            className="input-base w-full"
+          >
+            <option value="Workshop">Workshop</option>
+            <option value="Meeting">Meeting</option>
+            <option value="Competition">Competition</option>
+            <option value="Hackathon">Hackathon</option>
+            <option value="Deadline">Deadline</option>
+          </select>
+        </div>
 
-        <input
-          value={organizer}
-          onChange={(e) => setOrganizer(e.target.value)}
-          placeholder="Organizer"
-          className="w-full rounded-xl border border-slate-300 p-3 outline-none focus:border-blue-600"
-        />
-
-        <select
-          value={category}
-          onChange={(e) =>
-            setCategory(
-              e.target.value as
-                | "Workshop"
-                | "Meeting"
-                | "Competition"
-                | "Hackathon"
-                | "Deadline"
-            )
-          }
-          className="w-full rounded-xl border border-slate-300 p-3"
-        >
-          <option value="Workshop">Workshop</option>
-          <option value="Meeting">Meeting</option>
-          <option value="Competition">Competition</option>
-          <option value="Hackathon">Hackathon</option>
-          <option value="Deadline">Deadline</option>
-        </select>
-
+        <div className="mt-6 flex justify-end gap-3">
+          <Button
+            variant="secondary"
+            onClick={() => {
+              resetForm();
+              onClose();
+            }}
+          >
+            Cancel
+          </Button>
+          <Button onClick={handleCreate} leftIcon="Check">
+            Create Event
+          </Button>
+        </div>
       </div>
-
-      <div className="mt-8 flex justify-end gap-4">
-
-        <button
-          onClick={() => {
-            resetForm();
-            onClose();
-          }}
-          className="rounded-xl border border-slate-300 px-6 py-3 font-medium hover:bg-slate-100"
-        >
-          Cancel
-        </button>
-
-        <button
-          onClick={handleCreate}
-          className="rounded-xl bg-blue-700 px-6 py-3 font-semibold text-white hover:bg-blue-800"
-        >
-          Create Event
-        </button>
-
-      </div>
-
-    </div>
-  </div>
-);
+    </Modal>
+  );
 }

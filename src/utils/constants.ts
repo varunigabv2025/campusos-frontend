@@ -67,197 +67,49 @@ export const DEPARTMENTS = [
 export const YEARS = ['1st Year', '2nd Year', '3rd Year', '4th Year', 'Postgraduate'];
 
 // Per-role navigation menus
-// Per-role navigation menus
 export const NAV_ITEMS_BY_ROLE: Record<Role, NavItem[]> = {
   member: [
-    {
-      id: "dashboard",
-      label: "Dashboard",
-      to: "/app/member",
-      icon: "LayoutDashboard",
-    },
-    {
-      id: "events",
-      label: "Events",
-      to: "/app/events",
-      icon: "Rocket",
-    },
-    {
-      id: "planner",
-      label: "Planner",
-      to: "/app/planner",
-      icon: "CalendarDays",
-    },
-    {
-      id: "polls",
-      label: "Polls",
-      to: "/app/polls",
-      icon: "ClipboardList",
-    },
-    {
-      id: "projects",
-      label: "Projects",
-      to: "/app/projects",
-      icon: "FolderKanban",
-    },
-    {
-      id: "blogs",
-      label: "Blogs",
-      to: "/app/blogs",
-      icon: "PenLine",
-    },
-    {
-      id: "gallery",
-      label: "Gallery",
-      to: "/app/gallery",
-      icon: "Images",
-    },
-    {
-      id: "leaderboard",
-      label: "Leaderboard",
-      to: "/app/leaderboard",
-      icon: "Trophy",
-    },
-    {
-      id: "profile",
-      label: "Profile",
-      to: "/app/profile",
-      icon: "UserRound",
-    },
+    { id: 'dashboard', label: 'Dashboard',    to: '/app/member',              icon: 'LayoutDashboard' },
+    { id: 'events',    label: 'Events',        to: '/app/events',              icon: 'Rocket'          },
+    { id: 'planner',   label: 'Planner',       to: '/app/planner',             icon: 'CalendarDays'    },
+    { id: 'polls',     label: 'Polls',         to: '/app/polls',               icon: 'ClipboardList'   },
+    { id: 'projects',  label: 'Projects',      to: '/app/projects',            icon: 'FolderKanban'    },
+    { id: 'announcements', label: 'Announcements', to: '/app/announcements',    icon: 'Megaphone'       },
+    { id: 'blogs',     label: 'Blogs',         to: '/app/blogs',               icon: 'PenLine'         },
+    { id: 'gallery',   label: 'Gallery',       to: '/app/gallery',             icon: 'Images'          },
+    { id: 'leaderboard', label: 'Leaderboard', to: '/app/leaderboard',         icon: 'Trophy'          },
+    { id: 'profile',   label: 'Profile',       to: '/app/profile',             icon: 'UserRound'       },
+    { id: 'settings',  label: 'Settings',      to: '/app/settings',            icon: 'Settings'        },
   ],
-
   lead: [
-    {
-      id: "dashboard",
-      label: "Dashboard",
-      to: "/app/lead",
-      icon: "LayoutDashboard",
-    },
-    {
-      id: "events",
-      label: "Manage Events",
-      to: "/app/events",
-      icon: "Rocket",
-    },
-    {
-      id: "planner",
-      label: "Planner",
-      to: "/app/planner",
-      icon: "CalendarDays",
-    },
-    {
-      id: "polls",
-      label: "Polls",
-      to: "/app/polls",
-      icon: "ClipboardList",
-    },
-    {
-      id: "projects",
-      label: "Projects",
-      to: "/app/projects",
-      icon: "FolderKanban",
-    },
-    {
-      id: "members",
-      label: "Members",
-      to: "/app/members",
-      icon: "Users",
-    },
-    {
-      id: "announcements",
-      label: "Announcements",
-      to: "/app/announcements",
-      icon: "Megaphone",
-    },
-    {
-      id: "blogs",
-      label: "Blogs",
-      to: "/app/blogs",
-      icon: "PenLine",
-    },
-    {
-      id: "gallery",
-      label: "Gallery",
-      to: "/app/gallery",
-      icon: "Images",
-    },
-    {
-      id: "leaderboard",
-      label: "Leaderboard",
-      to: "/app/leaderboard",
-      icon: "Trophy",
-    },
-    {
-      id: "profile",
-      label: "Profile",
-      to: "/app/profile",
-      icon: "UserRound",
-    },
+    { id: 'dashboard',      label: 'Dashboard',        to: '/app/lead',              icon: 'LayoutDashboard' },
+    { id: 'manage-events',  label: 'Manage Events',    to: '/app/events',            icon: 'Rocket'          },
+    { id: 'planner',        label: 'Planner',          to: '/app/planner',           icon: 'CalendarDays'    },
+    { id: 'polls',          label: 'Polls',            to: '/app/polls',             icon: 'ClipboardList'   },
+    { id: 'projects',       label: 'Projects',         to: '/app/projects',          icon: 'FolderKanban'    },
+    { id: 'members',        label: 'Members',          to: '/app/members',           icon: 'Users'           },
+    { id: 'announcements',  label: 'Announcements',    to: '/app/announcements',     icon: 'Megaphone'       },
+    { id: 'blogs',          label: 'Blogs',            to: '/app/blogs',             icon: 'PenLine'         },
+    { id: 'gallery',        label: 'Gallery',          to: '/app/gallery',           icon: 'Images'          },
+    { id: 'leaderboard',    label: 'Leaderboard',      to: '/app/leaderboard',       icon: 'Trophy'          },
+    { id: 'profile',        label: 'Profile',          to: '/app/profile',           icon: 'UserRound'       },
+    { id: 'settings',       label: 'Settings',         to: '/app/settings',          icon: 'Settings'        },
   ],
-
   faculty: [
-    {
-      id: "dashboard",
-      label: "Dashboard",
-      to: "/app/faculty",
-      icon: "LayoutDashboard",
-    },
-    {
-      id: "planner",
-      label: "Planner",
-      to: "/app/planner",
-      icon: "CalendarDays",
-    },
-    {
-      id: "polls",
-      label: "Polls",
-      to: "/app/polls",
-      icon: "ClipboardList",
-    },
-    {
-      id: "projects",
-      label: "Projects",
-      to: "/app/projects",
-      icon: "FolderKanban",
-    },
-    {
-      id: "approvals",
-      label: "Approvals",
-      to: "/app/approvals",
-      icon: "CheckSquare",
-    },
-    {
-      id: "analytics",
-      label: "Analytics",
-      to: "/app/analytics",
-      icon: "BarChart3",
-    },
-    {
-      id: "reports",
-      label: "Reports",
-      to: "/app/reports",
-      icon: "FileText",
-    },
-    {
-      id: "clubs",
-      label: "Clubs",
-      to: "/app/clubs",
-      icon: "Layers",
-    },
-    {
-      id: "members",
-      label: "Members",
-      to: "/app/members",
-      icon: "Users",
-    },
-    {
-      id: "settings",
-      label: "Settings",
-      to: "/app/settings",
-      icon: "Settings",
-    },
+    { id: 'dashboard',   label: 'Dashboard',   to: '/app/faculty',         icon: 'LayoutDashboard' },
+    { id: 'planner',     label: 'Planner',     to: '/app/planner',         icon: 'CalendarDays'    },
+    { id: 'polls',       label: 'Polls',       to: '/app/polls',           icon: 'ClipboardList'   },
+    { id: 'projects',    label: 'Projects',    to: '/app/projects',         icon: 'FolderKanban'    },
+    { id: 'approvals',   label: 'Approvals',   to: '/app/approvals',       icon: 'CheckSquare'     },
+    { id: 'analytics',   label: 'Analytics',   to: '/app/analytics',       icon: 'BarChart3'       },
+    { id: 'reports',     label: 'Reports',     to: '/app/reports',         icon: 'FileText'        },
+    { id: 'clubs',       label: 'Clubs',       to: '/app/clubs',           icon: 'Layers'          },
+    { id: 'members',     label: 'Members',     to: '/app/members',         icon: 'Users'           },
+    { id: 'announcements', label: 'Announcements', to: '/app/announcements', icon: 'Megaphone'       },
+    { id: 'settings',    label: 'Settings',    to: '/app/settings',        icon: 'Settings'        },
   ],
 };
+
 // Fallback for pages that don't need role-specific nav
 export const NAV_ITEMS: NavItem[] = NAV_ITEMS_BY_ROLE.member;
 

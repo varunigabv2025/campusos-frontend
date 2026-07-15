@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -63,9 +62,6 @@ const roleConfig = {
   },
 };
 
-// ─── Google SVG ──────────────────────────────────────────────────────────────
-
-
 // ─── Floating card decorator ──────────────────────────────────────────────────
 function FloatingCard({ label, icon: Icon, delay, x, y }: { label: string; icon: typeof CalendarDays; delay: number; x: string; y: string }) {
   return (
@@ -94,76 +90,73 @@ export default function LoginPage({ role }: { role: Role }) {
   const [remember, setRemember] = useState(true);
   const [loading, setLoading] = useState(false);
   const demoLogin = (role: "member" | "lead" | "faculty") => {
-  localStorage.setItem("campusos_token", "demo-token");
+    localStorage.setItem("campusos_token", "demo-token");
 
-  localStorage.setItem(
-    "campusos_user",
-    JSON.stringify({
-      id: "demo",
-      name: `Demo ${role}`,
-      email: `${role}@campusos.com`,
-      role,
-    })
-  );
+    localStorage.setItem(
+      "campusos_user",
+      JSON.stringify({
+        id: "demo",
+        name: `Demo ${role}`,
+        email: `${role}@campusos.com`,
+        role,
+      })
+    );
 
-  window.location.href = `/app/${role}`;
-};
+    window.location.href = `/app/${role}`;
+  };
 
   const { register, handleSubmit, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: { email: '', password: '' },
   });
 
- const onSubmit = async (values: FormValues) => {
-  setLoading(true);
+  const onSubmit = async (values: FormValues) => {
+    setLoading(true);
 
-  try {
-    await login({
-      email: values.email,
-      password: values.password,
-      remember,
-      role: "member", // temporary until backend provides role
-    });
+    try {
+      await login({
+        email: values.email,
+        password: values.password,
+        remember,
+        role: "member", // temporary until backend provides role
+      });
 
-    toast({
-      title: "Welcome Back!",
-      description: "Login successful.",
-      variant: "success",
-    });
+      toast({
+        title: "Welcome Back!",
+        description: "Login successful.",
+        variant: "success",
+      });
 
-    navigate("/app");
+      navigate("/app");
 
-  } catch (error: any) {
+    } catch (error: any) {
+      let message = "Invalid email or password.";
 
-    let message = "Invalid email or password.";
+      switch (error.code) {
+        case "auth/user-not-found":
+        case "auth/invalid-credential":
+        case "auth/wrong-password":
+          message = "Invalid email or password.";
+          break;
 
-    switch (error.code) {
-      case "auth/user-not-found":
-      case "auth/invalid-credential":
-      case "auth/wrong-password":
-        message = "Invalid email or password.";
-        break;
+        case "auth/too-many-requests":
+          message = "Too many failed attempts. Please try again later.";
+          break;
 
-      case "auth/too-many-requests":
-        message =
-          "Too many failed attempts. Please try again later.";
-        break;
+        case "auth/network-request-failed":
+          message = "Network error. Please check your connection.";
+          break;
+      }
 
-      case "auth/network-request-failed":
-        message =
-          "Network error. Please check your connection.";
-        break;
+      toast({
+        title: "Login Failed",
+        description: message,
+        variant: "error",
+      });
+    } finally {
+      setLoading(false);
     }
-
-    toast({
-      title: "Login Failed",
-      description: message,
-      variant: "error",
-    });
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   const floatingCards = {
     member:  [
@@ -277,8 +270,6 @@ export default function LoginPage({ role }: { role: Role }) {
             <ArrowLeft className="h-4 w-4" /> Back to home
           </Link>
 
-         
-
           {/* Glass card */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -294,12 +285,11 @@ export default function LoginPage({ role }: { role: Role }) {
                 </div>
                 <div>
                   <h1 className="text-2xl font-bold text-ink">
-  Welcome Back 👋
-</h1>
-
-<p className="text-sm text-ink-soft">
-  Sign in to your CampusOS account
-</p>
+                    Welcome Back 👋
+                  </h1>
+                  <p className="text-sm text-ink-soft">
+                    Sign in to your CampusOS account
+                  </p>
                 </div>
               </div>
               <p className="mt-4 text-sm text-ink-soft">
@@ -328,17 +318,15 @@ export default function LoginPage({ role }: { role: Role }) {
               <div className="flex items-center justify-between">
                 <Checkbox checked={remember} onChange={setRemember} label="Remember me" />
                 <Link
-  to="/forgot-password"
-  className="text-sm font-medium text-navy hover:underline"
->
-  Forgot Password?
-</Link>
+                  to="/forgot-password"
+                  className="text-sm font-medium text-navy hover:underline"
+                >
+                  Forgot Password?
+                </Link>
               </div>
 
               <Button type="submit" className="w-full" size="lg" loading={loading} magnetic>
-                {loading
-  ? "Signing In..."
-  : "Sign In"}
+                {loading ? "Signing In..." : "Sign In"}
               </Button>
 
               {/* Divider */}
@@ -352,80 +340,58 @@ export default function LoginPage({ role }: { role: Role }) {
               </div>
 
               {/* Google button — UI only, MERN-ready */}
-             <GoogleButton />
-             <div className="mt-6">
+              <GoogleButton />
 
-  <div className="relative mb-5">
-    <div className="absolute inset-0 flex items-center">
-      <div className="w-full border-t border-border-soft" />
-    </div>
+              <div className="mt-6">
+                <div className="relative mb-5">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-border-soft" />
+                  </div>
+                  <div className="relative flex justify-center">
+                    <span className="bg-white px-3 text-xs font-semibold text-ink-soft">
+                      Quick Demo Access
+                    </span>
+                  </div>
+                </div>
 
-    <div className="relative flex justify-center">
-      <span className="bg-white px-3 text-xs font-semibold text-ink-soft">
-        Quick Demo Access
-      </span>
-    </div>
-  </div>
+                <div className="space-y-3">
+                  <button
+                    type="button"
+                    onClick={() => demoLogin("member")}
+                    className="flex w-full items-center justify-between rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 transition hover:bg-blue-100 cursor-pointer"
+                  >
+                    <div className="text-left">
+                      <p className="font-semibold text-sm">👤 Member Dashboard</p>
+                      <p className="text-[10px] text-gray-500">Explore events, projects and clubs</p>
+                    </div>
+                    <span className="text-slate-400">→</span>
+                  </button>
 
-  <div className="space-y-3">
+                  <button
+                    type="button"
+                    onClick={() => demoLogin("lead")}
+                    className="flex w-full items-center justify-between rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 transition hover:bg-amber-100 cursor-pointer"
+                  >
+                    <div className="text-left">
+                      <p className="font-semibold text-sm">👨‍💼 Club Lead Dashboard</p>
+                      <p className="text-[10px] text-gray-500">Manage members, events and announcements</p>
+                    </div>
+                    <span className="text-slate-400">→</span>
+                  </button>
 
-    <button
-      type="button"
-      onClick={() => demoLogin("member")}
-      className="flex w-full items-center justify-between rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 transition hover:bg-blue-100"
-    >
-      <div className="text-left">
-        <p className="font-semibold">
-          👤 Member Dashboard
-        </p>
-
-        <p className="text-xs text-gray-500">
-          Explore events, projects and clubs
-        </p>
-      </div>
-
-      →
-    </button>
-
-    <button
-      type="button"
-      onClick={() => demoLogin("lead")}
-      className="flex w-full items-center justify-between rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 transition hover:bg-amber-100"
-    >
-      <div className="text-left">
-        <p className="font-semibold">
-          👨‍💼 Club Lead Dashboard
-        </p>
-
-        <p className="text-xs text-gray-500">
-          Manage members, events and announcements
-        </p>
-      </div>
-
-      →
-    </button>
-
-    <button
-      type="button"
-      onClick={() => demoLogin("faculty")}
-      className="flex w-full items-center justify-between rounded-xl border border-green-200 bg-green-50 px-4 py-3 transition hover:bg-green-100"
-    >
-      <div className="text-left">
-        <p className="font-semibold">
-          👨‍🏫 Faculty Dashboard
-        </p>
-
-        <p className="text-xs text-gray-500">
-          View analytics and approvals
-        </p>
-      </div>
-
-      →
-    </button>
-
-  </div>
-
-</div>
+                  <button
+                    type="button"
+                    onClick={() => demoLogin("faculty")}
+                    className="flex w-full items-center justify-between rounded-xl border border-green-200 bg-green-50 px-4 py-3 transition hover:bg-green-100 cursor-pointer"
+                  >
+                    <div className="text-left">
+                      <p className="font-semibold text-sm">👨‍🏫 Faculty Dashboard</p>
+                      <p className="text-[10px] text-gray-500">View analytics and approvals</p>
+                    </div>
+                    <span className="text-slate-400">→</span>
+                  </button>
+                </div>
+              </div>
             </form>
           </motion.div>
 
@@ -439,11 +405,11 @@ export default function LoginPage({ role }: { role: Role }) {
             >
               New to {APP_NAME}?{' '}
               <Link
-  to="/signup"
-  className="font-semibold text-navy hover:underline"
->
-  Create an account
-</Link>
+                to="/signup"
+                className="font-semibold text-navy hover:underline"
+              >
+                Create an account
+              </Link>
             </motion.p>
           </AnimatePresence>
         </div>

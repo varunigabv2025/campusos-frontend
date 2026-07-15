@@ -1,18 +1,10 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import type { ReactNode } from "react";
-import { signOut } from "firebase/auth";
-import { auth } from "../firebase";
-import type { User as FirebaseUser } from "firebase/auth";
-
-import type {
-  AuthSession,
-  LoginPayload,
-  RegisterPayload,
-  Role,
-  User,
-} from "../types";
-
-import { authService } from "../services/auth";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import type { ReactNode } from 'react';
+import { signOut } from 'firebase/auth';
+import type { User as FirebaseUser } from 'firebase/auth';
+import { auth } from '../firebase';
+import type { AuthSession, LoginPayload, RegisterPayload, Role, User } from '../types';
+import { authService } from '../services/auth';
 
 interface AuthContextValue {
   user: User | null;
@@ -20,7 +12,6 @@ interface AuthContextValue {
   role: Role | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-
   login: (payload: LoginPayload) => Promise<AuthSession>;
   register: (payload: RegisterPayload) => Promise<AuthSession>;
   googleLogin: (firebaseUser: FirebaseUser) => Promise<void>;
@@ -30,8 +21,8 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-const TOKEN_KEY = "campusos_token";
-const USER_KEY = "campusos_user";
+const TOKEN_KEY = 'campusos_token';
+const USER_KEY = 'campusos_user';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -39,26 +30,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const storedToken = localStorage.getItem(TOKEN_KEY);
-    const storedUser = localStorage.getItem(USER_KEY);
-
-    if (storedToken && storedUser) {
+    const t = localStorage.getItem(TOKEN_KEY);
+    const u = localStorage.getItem(USER_KEY);
+    if (t && u) {
       try {
-        setToken(storedToken);
-        setUser(JSON.parse(storedUser));
+        setUser(JSON.parse(u));
+        setToken(t);
       } catch {
         localStorage.removeItem(TOKEN_KEY);
         localStorage.removeItem(USER_KEY);
       }
     }
-
     setIsLoading(false);
   }, []);
-// Save authenticated user in local storage
+
+  // Save authenticated user in local storage
   const persist = useCallback((session: AuthSession) => {
     localStorage.setItem(TOKEN_KEY, session.token);
     localStorage.setItem(USER_KEY, JSON.stringify(session.user));
-
     setUser(session.user);
     setToken(session.token);
   }, []);
@@ -80,7 +69,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     [persist]
   );
-// Google Authentication
+
+  // Google Authentication
   const googleLogin = useCallback(
     async (firebaseUser: FirebaseUser) => {
       const session = await authService.googleLogin(firebaseUser);
@@ -88,17 +78,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     [persist]
   );
-// Logout from Firebase
+
+  // Logout from Firebase
   const logout = useCallback(async () => {
     try {
-  await signOut(auth);
-} catch (error) {
-  console.error("Logout failed:", error);
-}
-
+      await signOut(auth);
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
-
     setUser(null);
     setToken(null);
   }, []);
@@ -106,14 +95,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const updateUser = useCallback((patch: Partial<User>) => {
     setUser((prev) => {
       if (!prev) return prev;
-
-      const next = {
-        ...prev,
-        ...patch,
-      };
-
+      const next = { ...prev, ...patch };
       localStorage.setItem(USER_KEY, JSON.stringify(next));
-
       return next;
     });
   }, []);
@@ -125,23 +108,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       role: user?.role ?? null,
       isAuthenticated: !!token,
       isLoading,
-
       login,
       register,
       googleLogin,
       logout,
       updateUser,
     }),
-    [
-      user,
-      token,
-      isLoading,
-      login,
-      register,
-      googleLogin,
-      logout,
-      updateUser,
-    ]
+    [user, token, isLoading, login, register, googleLogin, logout, updateUser]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -149,11 +122,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 // eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
-  const context = useContext(AuthContext);
-
-  if (!context) {
-    throw new Error("useAuth must be used within AuthProvider");
-  }
-
-  return context;
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
+  return ctx;
 }

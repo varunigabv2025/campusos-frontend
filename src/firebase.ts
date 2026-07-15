@@ -1,13 +1,12 @@
 import { initializeApp } from "firebase/app";
 import {
-  getFirestore,
-} from "firebase/firestore";
-import {
   getAuth,
   GoogleAuthProvider,
   setPersistence,
   browserLocalPersistence,
 } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
+
 const firebaseConfig = {
   apiKey: "AIzaSyCLl_o-1jpOGmCmKtRscGMwF_0YF_zl2wg",
   authDomain: "campusos-1fcd0.firebaseapp.com",
@@ -17,6 +16,7 @@ const firebaseConfig = {
   appId: "1:190011579305:web:5c27f064a178ba30e102b8",
   measurementId: "G-2XK5TRNNPH"
 };
+
 const app = initializeApp(firebaseConfig);
 
 export const auth = getAuth(app);
@@ -26,3 +26,4 @@ setPersistence(auth, browserLocalPersistence);
 
 export const googleProvider = new GoogleAuthProvider();
 export const db = getFirestore(app);
+

@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { useToast } from "../../context/ToastContext";
-import { X, CalendarDays, MapPin, Users, User } from "lucide-react";
+import { CalendarDays, MapPin, Users, User } from "lucide-react";
 import type { PlannerEvent } from "../../types/planner";
-
+import { Modal } from "../ui/Modal";
+import { Button } from "../ui/Button";
+import { Badge } from "../ui/Badge";
 
 interface Props {
   event: PlannerEvent | null;
@@ -18,11 +20,9 @@ export default function EventModal({
 
   useEffect(() => {
     if (!event) return;
-
     const registrations = JSON.parse(
       localStorage.getItem("registeredEvents") || "[]"
     );
-
     setRegistered(registrations.includes(event.id));
   }, [event]);
 
@@ -35,19 +35,17 @@ export default function EventModal({
 
     if (!registrations.includes(event.id)) {
       registrations.push(event.id);
-
       localStorage.setItem(
         "registeredEvents",
         JSON.stringify(registrations)
       );
-
       setRegistered(true);
 
-     toast({
-  title: "Registration Successful",
-  description: `You have registered for ${event.title}`,
-  variant: "success",
-});
+      toast({
+        title: "Registration Successful",
+        description: `You have registered for ${event.title}`,
+        variant: "success",
+      });
     }
   };
 
@@ -71,81 +69,69 @@ export default function EventModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="bg-white rounded-3xl shadow-xl w-[550px] p-8 relative">
+    <Modal
+      open={Boolean(event)}
+      onClose={onClose}
+      title={event.title}
+      description={`Campus Planner - ${event.category}`}
+      size="md"
+    >
+      <div className="space-y-5">
+        <div className="flex items-center gap-2">
+          <Badge tone="navy" dot>
+            {event.category}
+          </Badge>
+        </div>
 
-        <button
-          onClick={onClose}
-          className="absolute top-5 right-5 hover:text-red-500"
-        >
-          <X />
-        </button>
-
-        <span
-          className="px-3 py-1 rounded-full text-sm text-white"
-          style={{ backgroundColor: event.color }}
-        >
-          {event.category}
-        </span>
-
-        <h1 className="text-3xl font-bold mt-4">
-          {event.title}
-        </h1>
-
-        <p className="text-slate-500 mt-3">
+        <p className="text-sm text-ink-soft">
           {event.description}
         </p>
 
-        <div className="space-y-4 mt-8">
-
+        <div className="rounded-xl border border-border-soft bg-cream-100/40 p-4 space-y-3.5 text-sm text-ink">
           <div className="flex items-center gap-3">
-            <CalendarDays size={20} />
-            <span>
+            <CalendarDays className="h-4.5 w-4.5 text-navy" />
+            <span className="font-medium">
               {new Date(event.start).toLocaleString()}
             </span>
           </div>
 
           <div className="flex items-center gap-3">
-            <MapPin size={20} />
-            <span>{event.venue}</span>
+            <MapPin className="h-4.5 w-4.5 text-navy" />
+            <span className="font-medium">{event.venue}</span>
           </div>
 
           <div className="flex items-center gap-3">
-            <User size={20} />
-            <span>{event.organizer}</span>
+            <User className="h-4.5 w-4.5 text-navy" />
+            <span className="font-medium">{event.organizer}</span>
           </div>
 
           <div className="flex items-center gap-3">
-            <Users size={20} />
-            <span>{event.participants} Participants</span>
+            <Users className="h-4.5 w-4.5 text-navy" />
+            <span className="font-medium">{event.participants} Participants</span>
           </div>
-
         </div>
 
-        <div className="flex gap-4 mt-10">
-
-          <button
+        <div className="flex gap-3 mt-6">
+          <Button
+            variant={registered ? "secondary" : "primary"}
             onClick={handleRegister}
             disabled={registered}
-            className={`flex-1 py-3 rounded-xl text-white font-semibold transition ${
-              registered
-                ? "bg-green-600 cursor-not-allowed"
-                : "bg-blue-700 hover:bg-blue-800"
-            }`}
+            className="flex-1"
+            leftIcon={registered ? "Check" : undefined}
           >
-            {registered ? "✓ Registered" : "Register"}
-          </button>
+            {registered ? "Registered" : "Register"}
+          </Button>
 
-          <button
+          <Button
+            variant="secondary"
             onClick={handleGoogleCalendar}
-            className="flex-1 border border-slate-300 hover:bg-slate-100 py-3 rounded-xl font-semibold"
+            className="flex-1"
+            leftIcon="CalendarDays"
           >
-            Add to Google Calendar
-          </button>
-
+            Add to Calendar
+          </Button>
         </div>
-
       </div>
-    </div>
+    </Modal>
   );
 }

@@ -5,12 +5,29 @@ import { Avatar } from '../../components/ui/Avatar';
 import { FadeIn, StaggerGroup, StaggerItem } from '../../components/ui/motion';
 import { mockLeaderboard } from '../../utils/mockData';
 
+import { useAuth } from '../../context/AuthContext';
+
 const podiumIcons = [Trophy, Medal, Award];
 const podiumColors = ['#F59E0B', '#9CA3AF', '#CD7F32'];
 
 export default function LeaderboardPage() {
-  const top3 = mockLeaderboard.slice(0, 3);
-  const rest = mockLeaderboard.slice(3);
+  const { user } = useAuth();
+  
+  const leaderboardData = mockLeaderboard.map((p) => {
+    if (p.rank === 7 && user) {
+      return {
+        ...p,
+        name: user.name || p.name,
+        club: user.club || p.club,
+        avatarUrl: user.avatarUrl || p.avatarUrl,
+        points: p.points
+      };
+    }
+    return p;
+  });
+
+  const top3 = leaderboardData.slice(0, 3);
+  const rest = leaderboardData.slice(3);
 
   return (
     <div className="space-y-6">

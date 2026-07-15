@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, Search, ChevronDown, LogOut, UserRound, Settings, Menu } from 'lucide-react';
+import { Bell, ChevronDown, LogOut, UserRound, Settings, Menu, Search } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useScrollPosition } from '../../hooks';
 import { Avatar } from '../ui/Avatar';
@@ -9,9 +9,21 @@ import { Badge } from '../ui/Badge';
 import { mockNotifications } from '../../utils/mockData';
 import { APP_NAME, NAV_ITEMS_BY_ROLE } from '../../utils/constants';
 import { cn } from '../../utils/cn';
+import type { NotificationItem } from '../../types';
 
 interface NavbarProps {
   onMenuClick: () => void;
+}
+
+const NOTIFICATIONS_KEY = 'campusos_notifications';
+
+function getNotifications(): NotificationItem[] {
+  try {
+    const stored = localStorage.getItem(NOTIFICATIONS_KEY);
+    return stored ? JSON.parse(stored) : mockNotifications;
+  } catch {
+    return mockNotifications;
+  }
 }
 
 export function Navbar({ onMenuClick }: NavbarProps) {
@@ -21,6 +33,7 @@ export function Navbar({ onMenuClick }: NavbarProps) {
   const navigate = useNavigate();
   const [profileOpen, setProfileOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
+  const [notifications, setNotifications] = useState<NotificationItem[]>(getNotifications);
 
   const role = user?.role ?? 'member';
   const navItems = NAV_ITEMS_BY_ROLE[role];
@@ -29,7 +42,20 @@ export function Navbar({ onMenuClick }: NavbarProps) {
     (n.to !== '/app/member' && n.to !== '/app/lead' && n.to !== '/app/faculty' && location.pathname.startsWith(n.to))
   );
 
-  const unread = mockNotifications.filter((n) => !n.read).length;
+  const unread = notifications.filter((n) => !n.read).length;
+
+  const saveNotifications = (next: NotificationItem[]) => {
+    localStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify(next));
+    setNotifications(next);
+  };
+
+  const markRead = (id: string) => {
+    saveNotifications(notifications.map((n) => n.id === id ? { ...n, read: true } : n));
+  };
+
+  const markAllRead = () => {
+    saveNotifications(notifications.map((n) => ({ ...n, read: true })));
+  };
 
   const handleLogout = () => {
     logout();
@@ -75,6 +101,8 @@ export function Navbar({ onMenuClick }: NavbarProps) {
           />
         </div>
 
+
+
         {/* Notifications */}
         <div className="relative">
           <button
@@ -97,15 +125,30 @@ export function Navbar({ onMenuClick }: NavbarProps) {
                 className="absolute right-0 mt-2 w-80 overflow-hidden rounded-2xl border border-border-soft bg-white shadow-lift"
               >
                 <div className="flex items-center justify-between border-b border-border-soft px-4 py-3">
-                  <span className="text-sm font-semibold text-ink">Notifications</span>
-                  <Badge tone="navy">{unread} new</Badge>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-semibold text-ink">Notifications</span>
+                    {unread > 0 && <Badge tone="navy">{unread} new</Badge>}
+                  </div>
+                  {unread > 0 && (
+                    <button
+                      onClick={markAllRead}
+                      className="text-xs font-semibold text-navy hover:underline"
+                    >
+                      Mark all read
+                    </button>
+                  )}
                 </div>
                 <div className="max-h-80 overflow-y-auto p-2">
-                  {mockNotifications.map((n) => (
-                    <div
+                  {notifications.map((n) => (
+                    <button
+                      type="button"
                       key={n.id}
+                      onClick={() => {
+                        markRead(n.id);
+                        setNotifOpen(false);
+                      }}
                       className={cn(
-                        'rounded-xl p-3 transition-colors hover:bg-cream-100',
+                        'w-full text-left rounded-xl p-3 transition-colors hover:bg-cream-100 focus:outline-none',
                         !n.read && 'bg-navy/[0.03]'
                       )}
                     >
@@ -115,7 +158,7 @@ export function Navbar({ onMenuClick }: NavbarProps) {
                       </div>
                       <p className="mt-0.5 text-xs text-ink-soft">{n.description}</p>
                       <p className="mt-1 text-[0.7rem] text-ink-soft/70">{n.time}</p>
-                    </div>
+                    </button>
                   ))}
                 </div>
               </motion.div>
