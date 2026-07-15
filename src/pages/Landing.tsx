@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
-  ArrowRight, Sparkles, ShieldCheck, Crown, Users,
+  ArrowRight,  ShieldCheck, Crown, Users,
    CalendarDays, FolderKanban, Trophy,
 } from 'lucide-react';
 import { ROLES, APP_NAME, APP_TAGLINE, APP_DESCRIPTION, LANDING_STATS } from '../utils/constants';
@@ -72,6 +72,11 @@ const FadeUpItem = ({ children, delay = 0 }: { children: React.ReactNode; delay?
 );
 
 export default function Landing() {
+  const buttonLabels = {
+  member: "Member",
+  lead: "Lead",
+  faculty: "Faculty",
+};
   return (
     <div className="relative min-h-screen overflow-hidden bg-cream">
       <AuroraBackground />
@@ -84,9 +89,13 @@ export default function Landing() {
         className="relative z-10 mx-auto flex max-w-7xl items-center justify-between px-6 py-5"
       >
         <div className="flex items-center gap-2.5">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-navy text-white shadow-soft">
-            <Sparkles className="h-5 w-5" />
-          </div>
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white shadow-soft p-1">
+  <img
+    src="/favicon.png"
+    alt="CampusOS"
+    className="h-8 w-8 object-contain"
+  />
+</div>
           <div>
             <span className="text-lg font-bold tracking-tight text-ink">{APP_NAME}</span>
             <span className="ml-2 hidden rounded-full border border-border-soft bg-white/70 px-2.5 py-0.5 text-[0.7rem] font-medium text-ink-soft sm:inline">
@@ -204,7 +213,7 @@ Every Achievement.
                       <h3 className="mt-1 text-xl font-bold text-ink">{role.title}</h3>
                       <p className="mt-3 text-sm leading-relaxed text-ink-soft">{role.description}</p>
                       <div className="mt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-navy transition-all group-hover:gap-2.5">
-                        Continue as {role.title.split(' ')[0]}
+                        Continue as {buttonLabels[roleKey]}
                         <ArrowRight className="h-4 w-4" />
                       </div>
                     </div>
@@ -386,9 +395,13 @@ Start Your Journey
       <footer className="relative z-10 border-t border-border-soft bg-white/40 backdrop-blur-sm">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-6 py-5 text-sm text-ink-soft sm:flex-row">
           <div className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-navy text-white">
-              <span className="text-xs font-bold">C</span>
-            </div>
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-white shadow-sm p-1">
+  <img
+    src="/favicon.png"
+    alt="CampusOS"
+    className="h-5 w-5 object-contain"
+  />
+</div>
             <span className="font-semibold text-ink">{APP_NAME}</span>
             <span className="text-ink-soft/50">·</span>
             <span>{APP_DESCRIPTION}</span>

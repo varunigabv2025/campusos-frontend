@@ -46,9 +46,16 @@ export default function FacultyDashboard() {
   });
   const calendar = buildMockCalendar(events);
   const weekdays = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
-  const hour = new Date().getHours();
-  const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
-  const firstName = user?.name?.split(' ')[0] ?? 'there';
+ const hour = new Date().getHours();
+
+const greeting =
+  hour < 12
+    ? 'Good Morning'
+    : hour < 17
+    ? 'Good Afternoon'
+    : 'Good Evening';
+
+const firstName = user?.name?.split(' ')[0] ?? 'there';
 
   return (
     <div className="space-y-6">

@@ -108,7 +108,7 @@ export const NAV_ITEMS_BY_ROLE: Record<Role, NavItem[]> = {
     { id: 'clubs',       label: 'Clubs',       to: '/app/clubs',           icon: 'Layers'          },
     { id: 'members',     label: 'Members',     to: '/app/members',         icon: 'Users'           },
     { id: 'announcements', label: 'Announcements', to: '/app/announcements', icon: 'Megaphone'       },
-    { id: 'badges',      label: 'Badges',      to: '/app/badges',          icon: 'Award'           },
+    
     { id: 'settings',    label: 'Settings',    to: '/app/settings',        icon: 'Settings'        },
   ],
 };

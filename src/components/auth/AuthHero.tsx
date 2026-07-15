@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import {
-  Sparkles,
+ 
   CalendarDays,
   Trophy,
   FolderKanban,
@@ -24,8 +24,12 @@ export default function AuthHero() {
         className="relative flex items-center gap-3 text-white"
       >
         <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 backdrop-blur">
-          <Sparkles className="h-6 w-6" />
-        </div>
+  <img
+    src="/favicon.png"
+    alt="CampusOS"
+    className="h-8 w-8 object-contain"
+  />
+</div>
 
         <div>
           <h2 className="text-xl font-bold">

@@ -42,46 +42,72 @@ export default function LeaderboardPage() {
       </FadeIn>
 
       {/* Podium */}
-      <FadeIn delay={0.08}>
-        <div className="grid gap-4 sm:grid-cols-3">
-          {[1, 0, 2].map((idx, displayIdx) => {
-            const p = top3[idx];
-            const Icon = podiumIcons[idx];
-            const color = podiumColors[idx];
-            return (
-              <motion.div
-                key={p.rank}
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: displayIdx * 0.1, type: 'spring', stiffness: 200 }}
-                className={displayIdx === 0 ? 'sm:-mt-4' : ''}
-              >
-                <div
-                  onClick={() => setSelectedMemberName(p.name)}
-                  className={`card-surface flex flex-col items-center p-6 text-center cursor-pointer hover:border-navy/20 hover:shadow-lift transition-all ${
-                    idx === 0 ? 'shadow-lift ring-2 ring-navy/10' : ''
-                  }`}
-                >
-                  <div className="relative">
-                    <Avatar name={p.name} src={p.avatarUrl} size="xl" ring />
-                    <span
-                      className="absolute -bottom-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full text-white shadow-soft"
-                      style={{ backgroundColor: color }}
-                    >
-                      <Icon className="h-4 w-4" />
-                    </span>
-                  </div>
-                  <h3 className="mt-4 text-base font-bold text-ink">{p.name}</h3>
-                  <p className="text-xs text-ink-soft">{p.club}</p>
-                  <p className="mt-3 text-2xl font-bold tracking-tight text-navy">{p.points.toLocaleString()}</p>
-                  <p className="text-xs text-ink-soft">points</p>
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
-      </FadeIn>
+<FadeIn delay={0.08}>
+  <div className="grid gap-6 sm:grid-cols-3 items-end">
+    {[1, 0, 2].map((idx, displayIdx) => {
+      const p = top3[idx];
+      const Icon = podiumIcons[idx];
+      const color = podiumColors[idx];
 
+      return (
+        <motion.div
+          key={p.rank}
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{
+            delay: displayIdx * 0.12,
+            type: "spring",
+            stiffness: 220,
+          }}
+          className={idx === 0 ? "sm:-mt-8" : ""}
+        >
+          <div
+            onClick={() => setSelectedMemberName(p.name)}
+            className={`card-surface flex flex-col items-center rounded-3xl p-8 text-center cursor-pointer transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl ${
+              idx === 0
+                ? "ring-2 ring-yellow-400/30 shadow-2xl"
+                : "shadow-soft"
+            }`}
+          >
+            <div className="relative">
+              <Avatar
+                name={p.name}
+                src={p.avatarUrl}
+                size="xl"
+                ring
+              />
+
+              <div
+                className="absolute -bottom-2 -right-2 flex h-10 w-10 items-center justify-center rounded-full border-4 border-white text-white shadow-lg"
+                style={{ backgroundColor: color }}
+              >
+                <Icon className="h-5 w-5" />
+              </div>
+            </div>
+
+            <h3 className="mt-5 text-2xl font-bold text-ink">
+              {p.name}
+            </h3>
+
+            <p className="mt-1 text-sm text-ink-soft">
+              {p.club}
+            </p>
+
+            <div className="mt-6">
+              <p className="text-5xl font-extrabold tracking-tight text-navy">
+                {p.points.toLocaleString()}
+              </p>
+
+              <p className="mt-1 text-sm text-ink-soft">
+                points
+              </p>
+            </div>
+          </div>
+        </motion.div>
+      );
+    })}
+  </div>
+</FadeIn>
       {/* Rest */}
       <StaggerGroup>
         <Card>

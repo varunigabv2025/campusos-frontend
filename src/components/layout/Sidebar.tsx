@@ -49,9 +49,11 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
         'flex h-16 items-center gap-2.5 border-b border-border-soft px-4',
         collapsed && 'justify-center px-2'
       )}>
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-navy text-white shadow-soft">
-          <Icon name="Sparkles" className="h-5 w-5" />
-        </div>
+        <img
+  src="/favicon.png"
+  alt="CampusOS"
+  className="h-10 w-10 rounded-xl object-contain shadow-soft"
+/>
         {!collapsed && (
           <div className="overflow-hidden">
             <p className="text-sm font-bold leading-tight text-ink">{APP_NAME}</p>
