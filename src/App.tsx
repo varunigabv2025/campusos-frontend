@@ -10,6 +10,9 @@ import SignupPage from "./pages/auth/SignupPage";
 import Landing from './pages/Landing';
 import LoginPage from './pages/auth/LoginPage';
 
+import ProjectDetailsPage from "./pages/dashboard/ProjectDetailsPage";
+
+
 
 // Dashboards
 import Dashboard from './pages/dashboard/Dashboard';
@@ -160,6 +163,11 @@ export default function App() {
               <Route
                 path="projects"
                 element={<ProjectsPage />}
+              />
+
+              <Route
+                path="projects/:id"
+                element={<ProjectDetailsPage />}
               />
 
               <Route

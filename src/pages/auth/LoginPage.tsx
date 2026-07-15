@@ -93,6 +93,21 @@ export default function LoginPage({ role }: { role: Role }) {
   const { toast } = useToast();
   const [remember, setRemember] = useState(true);
   const [loading, setLoading] = useState(false);
+  const demoLogin = (role: "member" | "lead" | "faculty") => {
+  localStorage.setItem("campusos_token", "demo-token");
+
+  localStorage.setItem(
+    "campusos_user",
+    JSON.stringify({
+      id: "demo",
+      name: `Demo ${role}`,
+      email: `${role}@campusos.com`,
+      role,
+    })
+  );
+
+  window.location.href = `/app/${role}`;
+};
 
   const { register, handleSubmit, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -338,6 +353,79 @@ export default function LoginPage({ role }: { role: Role }) {
 
               {/* Google button — UI only, MERN-ready */}
              <GoogleButton />
+             <div className="mt-6">
+
+  <div className="relative mb-5">
+    <div className="absolute inset-0 flex items-center">
+      <div className="w-full border-t border-border-soft" />
+    </div>
+
+    <div className="relative flex justify-center">
+      <span className="bg-white px-3 text-xs font-semibold text-ink-soft">
+        Quick Demo Access
+      </span>
+    </div>
+  </div>
+
+  <div className="space-y-3">
+
+    <button
+      type="button"
+      onClick={() => demoLogin("member")}
+      className="flex w-full items-center justify-between rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 transition hover:bg-blue-100"
+    >
+      <div className="text-left">
+        <p className="font-semibold">
+          👤 Member Dashboard
+        </p>
+
+        <p className="text-xs text-gray-500">
+          Explore events, projects and clubs
+        </p>
+      </div>
+
+      →
+    </button>
+
+    <button
+      type="button"
+      onClick={() => demoLogin("lead")}
+      className="flex w-full items-center justify-between rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 transition hover:bg-amber-100"
+    >
+      <div className="text-left">
+        <p className="font-semibold">
+          👨‍💼 Club Lead Dashboard
+        </p>
+
+        <p className="text-xs text-gray-500">
+          Manage members, events and announcements
+        </p>
+      </div>
+
+      →
+    </button>
+
+    <button
+      type="button"
+      onClick={() => demoLogin("faculty")}
+      className="flex w-full items-center justify-between rounded-xl border border-green-200 bg-green-50 px-4 py-3 transition hover:bg-green-100"
+    >
+      <div className="text-left">
+        <p className="font-semibold">
+          👨‍🏫 Faculty Dashboard
+        </p>
+
+        <p className="text-xs text-gray-500">
+          View analytics and approvals
+        </p>
+      </div>
+
+      →
+    </button>
+
+  </div>
+
+</div>
             </form>
           </motion.div>
 

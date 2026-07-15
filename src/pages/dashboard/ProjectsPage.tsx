@@ -1,73 +1,131 @@
-import { motion } from 'framer-motion';
-import { FolderKanban, Users, CalendarDays } from 'lucide-react';
-import { Badge } from '../../components/ui/Badge';
-import { Button } from '../../components/ui/Button';
-import { SearchBar } from '../../components/ui/SearchBar';
-import { FadeIn, StaggerGroup, StaggerItem } from '../../components/ui/motion';
-import { mockProjects } from '../../utils/mockData';
-import { useState } from 'react';
+import { useMemo, useState } from "react";
+import { Search } from "lucide-react";
 
-const statusTone = {
-  active: 'success',
-  review: 'warning',
-  planning: 'navy',
-  completed: 'neutral',
-} as const;
+import ProjectCard from "../../components/projects/ProjectCard";
+import { mockProjects } from "../../data/mockProjects";
 
 export default function ProjectsPage() {
-  const [query, setQuery] = useState('');
-  const filtered = mockProjects.filter((p) => p.name.toLowerCase().includes(query.toLowerCase()));
+  const [search, setSearch] = useState("");
+  const [club, setClub] = useState("All");
+
+  const clubs = useMemo(
+    () => ["All", ...new Set(mockProjects.map((p) => p.club))],
+    []
+  );
+
+  const filteredProjects = useMemo(() => {
+    return mockProjects.filter((project) => {
+      const matchesSearch =
+        project.title.toLowerCase().includes(search.toLowerCase()) ||
+        project.description.toLowerCase().includes(search.toLowerCase());
+
+      const matchesClub =
+        club === "All" || project.club === club;
+
+      return matchesSearch && matchesClub;
+    });
+  }, [search, club]);
+
+  const featuredProjects = filteredProjects.filter(
+    (project) => project.featured
+  );
 
   return (
-    <div className="space-y-6">
-      <FadeIn>
-        <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">Projects</h1>
-            <p className="mt-1 text-sm text-ink-soft">Track active and planned club projects.</p>
-          </div>
-          <Button leftIcon="Plus" magnetic>New Project</Button>
+    <div className="mx-auto max-w-7xl space-y-10 p-6">
+
+      {/* Header */}
+      <div>
+        <h1 className="text-4xl font-bold text-gray-900">
+          🚀 Club Projects
+        </h1>
+
+        <p className="mt-2 text-gray-600">
+          Discover projects created by CampusOS clubs.
+        </p>
+      </div>
+
+      {/* Search + Filter */}
+      <div className="flex flex-col gap-4 md:flex-row">
+
+        <div className="relative flex-1">
+          <Search
+            className="absolute left-4 top-3.5 text-gray-400"
+            size={18}
+          />
+
+          <input
+            type="text"
+            placeholder="Search projects..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full rounded-xl border border-gray-300 py-3 pl-11 pr-4 outline-none transition focus:border-indigo-500"
+          />
         </div>
-      </FadeIn>
 
-      <FadeIn delay={0.08}>
-        <SearchBar value={query} onChange={setQuery} placeholder="Search projects…" className="sm:max-w-xs" />
-      </FadeIn>
+        <select
+          value={club}
+          onChange={(e) => setClub(e.target.value)}
+          className="rounded-xl border border-gray-300 px-4 py-3 outline-none focus:border-indigo-500"
+        >
+          {clubs.map((club) => (
+            <option key={club} value={club}>
+              {club}
+            </option>
+          ))}
+        </select>
 
-      <StaggerGroup className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-        {filtered.map((p) => (
-          <StaggerItem key={p.id}>
-            <motion.div whileHover={{ y: -6 }} className="card-surface p-5 transition-shadow hover:shadow-lift">
-              <div className="flex items-start justify-between">
-                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-navy/10 text-navy">
-                  <FolderKanban className="h-5 w-5" />
-                </span>
-                <Badge tone={statusTone[p.status]} dot>{p.status}</Badge>
-              </div>
-              <h3 className="mt-4 text-base font-semibold text-ink">{p.name}</h3>
-              <p className="mt-1 line-clamp-2 text-sm text-ink-soft">{p.description}</p>
-              <div className="mt-4">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-ink-soft">Progress</span>
-                  <span className="font-semibold text-ink">{p.progress}%</span>
-                </div>
-                <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-beige">
-                  <motion.div
-                    className="h-full rounded-full bg-navy"
-                    initial={{ width: 0 }}
-                    animate={{ width: `${p.progress}%` }}
-                    transition={{ duration: 0.8, ease: 'easeOut' }}
-                  />
-                </div>
-              </div>
-              <div className="mt-4 flex items-center justify-between border-t border-border-soft pt-3 text-xs text-ink-soft">
-                <span className="inline-flex items-center gap-1"><Users className="h-3.5 w-3.5" /> {p.members} members</span>
-                <span className="inline-flex items-center gap-1"><CalendarDays className="h-3.5 w-3.5" /> Due {p.dueDate}</span>
-              </div>
-            </motion.div>
-          </StaggerItem>
-        ))}
-      </StaggerGroup>
+      </div>
+
+      {/* Featured */}
+      {featuredProjects.length > 0 && (
+        <section>
+
+          <h2 className="mb-5 text-2xl font-bold">
+            ⭐ Featured Projects
+          </h2>
+
+          <div className="grid gap-6 md:grid-cols-2">
+            {featuredProjects.map((project) => (
+              <ProjectCard
+                key={project.id}
+                project={project}
+              />
+            ))}
+          </div>
+
+        </section>
+      )}
+
+      {/* All Projects */}
+      <section>
+
+        <h2 className="mb-5 text-2xl font-bold">
+          📂 All Projects
+        </h2>
+
+        {filteredProjects.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-gray-300 p-12 text-center">
+            <h3 className="text-xl font-semibold">
+              No projects found
+            </h3>
+
+            <p className="mt-2 text-gray-500">
+              Try another search or filter.
+            </p>
+          </div>
+        ) : (
+          <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+            {filteredProjects.map((project) => (
+              <ProjectCard
+                key={project.id}
+                project={project}
+              />
+            ))}
+          </div>
+        )}
+
+      </section>
+
     </div>
   );
 }
