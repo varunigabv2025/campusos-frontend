@@ -28,23 +28,40 @@ import {
 
 import { passwordStrength } from "../../utils/cn";
 
-const step1Schema = z.object({
-  name: z
-    .string()
-    .min(2, "Enter your full name"),
+interface Step1 {
+  name: string;
+  email: string;
+  department: string;
+  year?: string;
+  designation?: string;
+  club?: string;
+}
 
-  email: z
-    .string()
-    .email("Enter a valid email"),
-
-  department: z
-    .string()
-    .min(1, "Select a department"),
-
-  year: z
-    .string()
-    .min(1, "Select your year"),
-});
+const getStep1Schema = (role: Role) => {
+  if (role === "faculty") {
+    return z.object({
+      name: z.string().min(2, "Enter your full name"),
+      email: z.string().email("Enter a valid email"),
+      department: z.string().min(1, "Select a department"),
+      designation: z.string().min(2, "Enter your designation"),
+    });
+  }
+  if (role === "lead") {
+    return z.object({
+      name: z.string().min(2, "Enter your full name"),
+      email: z.string().email("Enter a valid email"),
+      department: z.string().min(1, "Select a department"),
+      year: z.string().min(1, "Select your year"),
+      club: z.string().min(2, "Enter your club name"),
+    });
+  }
+  return z.object({
+    name: z.string().min(2, "Enter your full name"),
+    email: z.string().email("Enter a valid email"),
+    department: z.string().min(1, "Select a department"),
+    year: z.string().min(1, "Select your year"),
+  });
+};
 
 const step2Schema = z.object({
   password: z
@@ -69,10 +86,6 @@ const step2Schema = z.object({
     path: ["confirmPassword"],
   }
 );
-
-type Step1 = z.infer<
-  typeof step1Schema
->;
 
 type Step2 = z.infer<
   typeof step2Schema
@@ -105,13 +118,16 @@ export default function SignupPage({ role = "member" }: { role?: Role }) {
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<Partial<Step1>>({});
 
+  const schema = getStep1Schema(role);
   const s1 = useForm<Step1>({
-    resolver: zodResolver(step1Schema),
+    resolver: zodResolver(schema),
     defaultValues: {
       name: "",
       email: "",
       department: "",
       year: "",
+      designation: "",
+      club: "",
     },
   });
 
@@ -150,9 +166,11 @@ export default function SignupPage({ role = "member" }: { role?: Role }) {
         name: data.name!,
         email: data.email!,
         department: data.department!,
-        year: data.year!,
+        year: role === "faculty" ? "Faculty" : data.year!,
         password: values.password,
         role,
+        designation: data.designation,
+        club: data.club,
       });
 
       setStep(3);
@@ -307,28 +325,48 @@ export default function SignupPage({ role = "member" }: { role?: Role }) {
               )}
             </div>
 
-            <div>
-              <label className="mb-1.5 block text-[0.825rem] font-semibold text-ink">
-                Year
-              </label>
+            {role !== 'faculty' && (
+              <div>
+                <label className="mb-1.5 block text-[0.825rem] font-semibold text-ink">
+                  Year
+                </label>
 
-              <Dropdown
-                value={s1.watch("year") ?? ""}
-                options={YEARS.map((y) => ({
-                  value: y,
-                  label: y,
-                }))}
-                onChange={(v) =>
-                  s1.setValue("year", v, { shouldValidate: true })
-                }
-                placeholder="Select Year"
+                <Dropdown
+                  value={s1.watch("year") ?? ""}
+                  options={YEARS.map((y) => ({
+                    value: y,
+                    label: y,
+                  }))}
+                  onChange={(v) =>
+                    s1.setValue("year", v, { shouldValidate: true })
+                  }
+                  placeholder="Select Year"
+                />
+                {s1.formState.errors.year && (
+                  <p className="mt-1 text-xs text-red-500">
+                    {s1.formState.errors.year.message}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {role === 'faculty' && (
+              <Input
+                label="Designation"
+                placeholder="e.g. Associate Professor & Club Coordinator"
+                error={s1.formState.errors.designation?.message}
+                {...s1.register("designation")}
               />
-              {s1.formState.errors.year && (
-                <p className="mt-1 text-xs text-red-500">
-                  {s1.formState.errors.year.message}
-                </p>
-              )}
-            </div>
+            )}
+
+            {role === 'lead' && (
+              <Input
+                label="Club Name"
+                placeholder="e.g. Developers Club"
+                error={s1.formState.errors.club?.message}
+                {...s1.register("club")}
+              />
+            )}
 
             <Button
               type="submit"
