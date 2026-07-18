@@ -4,7 +4,7 @@ import {
   ArrowRight,  ShieldCheck, Crown, Users,
    CalendarDays, FolderKanban, Trophy,
 } from 'lucide-react';
-import { ROLES, APP_NAME, APP_TAGLINE, APP_DESCRIPTION, LANDING_STATS } from '../utils/constants';
+import { ROLES, APP_NAME,  APP_DESCRIPTION, LANDING_STATS } from '../utils/constants';
 import type { Role } from '../types';
 import { AuroraBackground } from '../components/layout/AuroraBackground';
 
@@ -118,15 +118,7 @@ export default function Landing() {
 
       {/* ── Hero ────────────────────────────────────────────── */}
       <section className="relative z-10 mx-auto max-w-7xl px-6 pb-10 pt-16 text-center sm:pt-24">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1, type: 'spring', stiffness: 200, damping: 24 }}
-          className="mx-auto inline-flex items-center gap-2 rounded-full border border-border-soft bg-white/70 px-4 py-1.5 text-xs font-semibold text-navy backdrop-blur"
-        >
-          <span className="flex h-1.5 w-1.5 rounded-full bg-success" />
-          {APP_TAGLINE}
-        </motion.div>
+        
 
         <motion.h1
   initial={{ opacity: 0, y: 24 }}
@@ -294,12 +286,10 @@ export default function Landing() {
 
   <div className="mx-auto mb-14 max-w-3xl text-center">
 
-    <span className="inline-flex items-center rounded-full border border-border-soft bg-white px-4 py-1 text-xs font-semibold text-navy shadow-soft">
-      📸 LIVE CAMPUS GALLERY
-    </span>
+   
 
     <h2 className="mt-5 text-5xl font-bold tracking-tight text-ink">
-     Campus Moments ✨
+     Campus Moments 
     </h2>
 
     <p className="mx-auto mt-5 max-w-2xl text-lg text-ink-soft">
